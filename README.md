@@ -6,6 +6,6 @@ Install Visual Studio and build the solution. You need .NET Framework v4.7 in or
 Or just download the binaries here.
 
 # Dependencies
-You need to install [Assimp's Nuget Package](https://www.nuget.org/packages/AssimpNet/) on ``IntermediateConverter`` project.
+You might need to reinstall [Assimp's Nuget Package](https://www.nuget.org/packages/AssimpNet/) (on ``LibNitroG3DTools``).
 
 ```Install-Package AssimpNet -Version 4.1.0```
