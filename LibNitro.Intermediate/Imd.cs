@@ -60,9 +60,13 @@ namespace LibNitro.Intermediate
 
         [XmlAttribute("node_size")] public string NodeSize = "1 1";
 
+        [XmlIgnore] public byte NodeCount => byte.Parse(NodeSize.Split(' ')[1]);
+
         [XmlAttribute("compress_material")] public string CompressMaterial = "on";
 
         [XmlAttribute("material_size")] public string MaterialSize;
+
+        [XmlIgnore] public byte MaterialCount => byte.Parse(MaterialSize.Split(' ')[1]);
 
         [XmlAttribute("output_texture")] public string OutputTexture = "used";
 
@@ -78,6 +82,30 @@ namespace LibNitro.Intermediate
         [XmlAttribute("xyz")] public string Xyz;
 
         [XmlAttribute("whd")] public string Whd;
+
+        [XmlIgnore]
+        public Vector3 Position
+        {
+            get
+            {
+                var vals = Xyz.Split(' ');
+                return new Vector3(float.Parse(vals[0]), float.Parse(vals[1]), float.Parse(vals[2]));
+            }
+
+            set => Xyz = $"{value.X} {value.Y} {value.Z}";
+        }
+
+        [XmlIgnore]
+        public Vector3 Size
+        {
+            get
+            {
+                var vals = Whd.Split(' ');
+                return new Vector3(float.Parse(vals[0]), float.Parse(vals[1]), float.Parse(vals[2]));
+            }
+
+            set => Whd = $"{value.X} {value.Y} {value.Z}";
+        }
     }
 
     public class TexImageArray
@@ -128,7 +156,7 @@ namespace LibNitro.Intermediate
         [XmlAttribute("original_height")] public int OriginalHeight;
 
         [XmlAttribute("format")] public string Format;
-
+        
         [XmlAttribute("color0_mode")] public string Color0Mode;
 
         [XmlAttribute("palette_name")] public string PaletteName;
@@ -141,6 +169,8 @@ namespace LibNitro.Intermediate
         [XmlAttribute("size")] public int Size;
 
         [XmlText] public string Value;
+
+        [XmlIgnore] public byte[] Bytes => Utils.StringDataToBytes(Value);
     }
 
     public class Tex4x4PaletteIndex
@@ -148,6 +178,8 @@ namespace LibNitro.Intermediate
         [XmlAttribute("size")] public int Size;
 
         [XmlText] public string Value;
+
+        [XmlIgnore] public byte[] Bytes => Utils.StringDataToBytes(Value);
     }
 
     public class TexPaletteArray
@@ -188,6 +220,8 @@ namespace LibNitro.Intermediate
         [XmlAttribute("color_size")] public int ColorSize;
 
         [XmlText] public string Value;
+
+        [XmlIgnore] public byte[] Bytes => Utils.StringDataToBytes(Value);
     }
 
     public class MaterialArray

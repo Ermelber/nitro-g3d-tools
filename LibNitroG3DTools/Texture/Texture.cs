@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
+using System.Drawing;
 using LibEndianBinaryIO;
 using LibNitro.GFX;
 using LibNitro.Hardware;
 
-namespace IntermediateConverter.Texture
+namespace LibNitroG3DTools.Texture
 {
     public class Texture
     {
@@ -83,6 +83,9 @@ namespace IntermediateConverter.Texture
             if (!File.Exists(path)) throw new FileNotFoundException("Texture path is wrong or the file is missing: " + path);
 
             TextureName = Path.GetFileNameWithoutExtension(path);
+
+            if (TextureName?.Length > 16)
+                Console.WriteLine($"Warning: Texture Name Length of '{TextureName}' exceeds the 16 characters limit. It will be truncated upon binary conversion.");
 
             if (Path.GetExtension(path) == ".tga")
             {
@@ -167,6 +170,8 @@ namespace IntermediateConverter.Texture
                 throw new NotSupportedException("Image format not supported: " + path);
             }
 
+            if (PaletteName?.Length > 16)
+                Console.WriteLine($"Warning: Palette Name Length of '{TextureName}' exceeds the 16 characters limit. It will be truncated upon binary conversion.");
         }
     }
 }

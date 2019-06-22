@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntermediateConverter", "In
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryConverter", "BinaryConverter\BinaryConverter.csproj", "{78972CD8-75FD-4107-92D1-6932DDCEE6B4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibNitroG3DTools", "LibNitroG3DTools\LibNitroG3DTools.csproj", "{9B76FE30-44F6-4BC1-9606-10C76BE13752}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{78972CD8-75FD-4107-92D1-6932DDCEE6B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78972CD8-75FD-4107-92D1-6932DDCEE6B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78972CD8-75FD-4107-92D1-6932DDCEE6B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B76FE30-44F6-4BC1-9606-10C76BE13752}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B76FE30-44F6-4BC1-9606-10C76BE13752}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B76FE30-44F6-4BC1-9606-10C76BE13752}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B76FE30-44F6-4BC1-9606-10C76BE13752}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using IntermediateConverter.Converter;
+using LibNitroG3DTools.Converter;
 
 namespace IntermediateConverter
 {
@@ -16,7 +16,7 @@ namespace IntermediateConverter
             {
                 if (args.Length > 0)
                 {
-                    var settings = ConversionSettings.GetArguments(args, out var outPath);
+                    var settings = ImdConverterSettings.GetArguments(args, out var outPath);
 
                     if (outPath == null)
                         outPath = Path.Combine(Path.GetDirectoryName(args[0].Replace("\"", String.Empty)),
@@ -73,7 +73,7 @@ namespace IntermediateConverter
             ).Write(@"E:\ermel\Desktop\conversion_tests\_imd\dk.imd");*/
             
             new ImdConverter(@"E:\ermel\Desktop\conversion_tests\test.fbx",
-                new ConversionSettings
+                new ImdConverterSettings
                 {
                     RotateX180 = true
                 }

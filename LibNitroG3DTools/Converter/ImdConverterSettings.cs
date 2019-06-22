@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace IntermediateConverter.Converter
+namespace LibNitroG3DTools.Converter
 {
-    public class ConversionSettings
+    public class ImdConverterSettings
     {
         public float Magnify = 1;
         public bool RotateX180 = false;
@@ -12,10 +12,10 @@ namespace IntermediateConverter.Converter
         public bool UsePrimitiveStrip = false;
         public bool Verbose = false;
 
-        public static ConversionSettings GetArguments(string[] args, out string outPath)
+        public static ImdConverterSettings GetArguments(string[] args, out string outPath)
         {
             outPath = null;
-            var settings = new ConversionSettings();
+            var settings = new ImdConverterSettings();
 
             for (int i = 1; i < args.Length; i++)
             {

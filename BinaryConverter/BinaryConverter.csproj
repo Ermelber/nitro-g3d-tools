@@ -35,11 +35,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -48,6 +43,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LibNitro.Intermediate\LibNitro.Intermediate.csproj">
+      <Project>{B0C7A03A-112E-4C65-A241-65BB6CEA3DF8}</Project>
+      <Name>LibNitro.Intermediate</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LibNitroG3DTools\LibNitroG3DTools.csproj">
+      <Project>{9b76fe30-44f6-4bc1-9606-10c76be13752}</Project>
+      <Name>LibNitroG3DTools</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

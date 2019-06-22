@@ -5,17 +5,17 @@ using Assimp;
 using LibFoundation.Math;
 using LibNitro.Intermediate;
 
-namespace IntermediateConverter.Converter
+namespace LibNitroG3DTools.Converter
 {
     public class ImdConverter
     {
         public static readonly GeneratorInfo GeneratorInfo = new GeneratorInfo
         {
             Name = "ASS to IMD (Made by Ermelber)",
-            Version = "0.2.4"
+            Version = "0.2.5"
         };
 
-        private readonly ConversionSettings _settings;
+        private readonly ImdConverterSettings _settings;
         private readonly Scene _scene;
         private ModelBounds _bounds;
 
@@ -41,8 +41,11 @@ namespace IntermediateConverter.Converter
                 ((int)Math.Round(_bounds.BoxWhd.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
                 ((int)Math.Round(_bounds.BoxWhd.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
 
-            _imd.Body.BoxTest.Xyz = $"{xyz.X} {xyz.Y} {xyz.Z}";
-            _imd.Body.BoxTest.Whd = $"{whd.X} {whd.Y} {whd.Z}";
+            //_imd.Body.BoxTest.Xyz = $"{xyz.X} {xyz.Y} {xyz.Z}";
+            //_imd.Body.BoxTest.Whd = $"{whd.X} {whd.Y} {whd.Z}";
+
+            _imd.Body.BoxTest.Position = xyz;
+            _imd.Body.BoxTest.Size = whd;
         }
 
         private void GetTextures()
@@ -77,6 +80,7 @@ namespace IntermediateConverter.Converter
                         var texPath = Path.GetFullPath(Path.Combine(_modelDirectory,
                             tex.FilePath.Substring(0, 2) == "//" ? tex.FilePath.Remove(0, 2) : tex.FilePath));
                         var texName = Path.GetFileNameWithoutExtension(texPath);
+                        
 
                         //Prevents doubled textures
                         bool repeated = false;
@@ -479,9 +483,9 @@ namespace IntermediateConverter.Converter
             }
         }
 
-        public ImdConverter(string path, ConversionSettings settings = null)
+        public ImdConverter(string path, ImdConverterSettings settings = null)
         {
-            _settings = settings ?? new ConversionSettings();
+            _settings = settings ?? new ImdConverterSettings();
 
             var context = new AssimpContext();
             _scene = context.ImportFile(path);
