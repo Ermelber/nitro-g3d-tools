@@ -117,14 +117,37 @@ namespace LibNitro.Intermediate.Imd
 
         public static byte[] Encode(List<DecodedCommand> decoded)
         {
+            var m = new MemoryStream();
+            var ew = new EndianBinaryWriterEx(m, Endianness.LittleEndian);
 
+            int offset = 0;
+            int packed = 0;
+
+            var commandQueue = new Queue<DecodedCommand>();
+
+            foreach (var command in decoded)
+            {
+                if (packed == 4)
+                {
+                    packed = 0;
+
+                    var queued = commandQueue.Dequeue();
+                }
+
+                commandQueue.Enqueue(command);
+                ew.Write((byte) command.G3dCommand);
+                packed++;
+            }
+
+            m.Close();
 
             return null;
         }
         
         public static List<DecodedCommand> Decode(byte[] dl)
         {
-            var er = new EndianBinaryReaderEx(new MemoryStream(dl), Endianness.LittleEndian);
+            var m = new MemoryStream(dl);
+            var er = new EndianBinaryReaderEx(m, Endianness.LittleEndian);
 
             int offset = 0;
             var commandQueue = new Queue<G3dCommand>();
@@ -205,6 +228,8 @@ namespace LibNitro.Intermediate.Imd
                         break;
                 }
             }
+
+            m.Close();
 
             return decoded;
         }
