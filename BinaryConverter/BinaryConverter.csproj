@@ -7,7 +7,7 @@
     <ProjectGuid>{78972CD8-75FD-4107-92D1-6932DDCEE6B4}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>BinaryConverter</RootNamespace>
-    <AssemblyName>BinaryConverter</AssemblyName>
+    <AssemblyName>binconv</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

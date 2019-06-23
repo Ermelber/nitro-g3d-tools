@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using LibNitroG3DTools.Converter;
+using LibNitroG3DTools.Converter.Intermediate.Imd;
 
 namespace IntermediateConverter
 {

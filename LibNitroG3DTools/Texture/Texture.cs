@@ -162,7 +162,7 @@ namespace LibNitroG3DTools.Texture
                 }
                 catch
                 {
-                    throw new NotSupportedException($"Failed to convert the bitmap to {Format}: " + path);
+                    throw new NotSupportedException($"Failed to convert the bitmap to '{Format}': " + path);
                 }
             }
             else
@@ -171,7 +171,7 @@ namespace LibNitroG3DTools.Texture
             }
 
             if (PaletteName?.Length > 16)
-                Console.WriteLine($"Warning: Palette Name Length of '{TextureName}' exceeds the 16 characters limit. It will be truncated upon binary conversion.");
+                Console.WriteLine($"Warning: Palette Name Length of '{PaletteName}' exceeds the 16 characters limit. It will be truncated upon binary conversion.");
         }
     }
 }

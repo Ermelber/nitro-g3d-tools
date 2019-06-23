@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using LibNitroG3DTools.Converter;
+using LibNitroG3DTools.Converter.Binary.Nsbmd;
 
 namespace BinaryConverter
 {
@@ -54,7 +54,6 @@ namespace BinaryConverter
             Console.WriteLine("\nUsage:\n\tbinconv INPUT [OPTIONS]");
             Console.WriteLine("\nOptions:");
             Console.WriteLine("\t-t/--etex\t\t\tFor IMD files, it exports NSBTX separately from NSBMD.");
-            //Console.WriteLine("\t-s/--strip\t\t\tEnables primitive stripping.");
             Console.WriteLine("\t-v/--verbose\t\t\tOutput warnings and other info.");
             Console.WriteLine();
         }

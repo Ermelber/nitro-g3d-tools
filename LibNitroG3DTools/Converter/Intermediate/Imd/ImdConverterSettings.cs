@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace LibNitroG3DTools.Converter
+namespace LibNitroG3DTools.Converter.Intermediate.Imd
 {
     public class ImdConverterSettings
     {

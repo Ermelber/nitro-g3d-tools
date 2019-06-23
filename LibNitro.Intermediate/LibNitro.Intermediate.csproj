@@ -38,15 +38,22 @@
     <Reference Include="LibFoundation">
       <HintPath>..\DLLs\LibFoundation.dll</HintPath>
     </Reference>
+    <Reference Include="LibNitro">
+      <HintPath>..\DLLs\LibNitro.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Imd.cs" />
+    <Compile Include="Imd\G3dDisplayList.cs" />
+    <Compile Include="Imd\Imd.cs" />
+    <Compile Include="Imd\PrimitiveArray.cs" />
     <Compile Include="Intermediate.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="VecFx10.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

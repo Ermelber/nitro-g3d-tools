@@ -4,8 +4,11 @@ using System.IO;
 using Assimp;
 using LibFoundation.Math;
 using LibNitro.Intermediate;
+using LibNitro.Intermediate.Imd;
+using Material = LibNitro.Intermediate.Imd.Material;
+using Node = LibNitro.Intermediate.Imd.Node;
 
-namespace LibNitroG3DTools.Converter
+namespace LibNitroG3DTools.Converter.Intermediate.Imd
 {
     public class ImdConverter
     {
@@ -23,7 +26,7 @@ namespace LibNitroG3DTools.Converter
         private Dictionary<int, List<Vector3>> _meshes = new Dictionary<int, List<Vector3>>();
         private readonly string _modelDirectory;
 
-        private Imd _imd;
+        private LibNitro.Intermediate.Imd.Imd _imd;
 
         private void GetPosScales()
         {
@@ -163,7 +166,7 @@ namespace LibNitroG3DTools.Converter
             int i = 0;
             foreach (var mat in _scene.Materials)
             {
-                var material = new LibNitro.Intermediate.Material
+                var material = new Material
                 {
                     Index = i,
                     Name = mat.Name.Length > 16 ? $"{mat.Name.Substring(0, 13)}{i}" : mat.Name, //Fixes the length of the material name
@@ -464,7 +467,7 @@ namespace LibNitroG3DTools.Converter
             {
                 _imd.Body.ModelInfo.NodeSize = "1 1";
 
-                _imd.Body.NodeArray.Nodes.Add(new LibNitro.Intermediate.Node
+                _imd.Body.NodeArray.Nodes.Add(new Node
                 {
                     Index = 0,
                     Name = "world_root",
@@ -490,7 +493,7 @@ namespace LibNitroG3DTools.Converter
             var context = new AssimpContext();
             _scene = context.ImportFile(path);
 
-            _imd = new Imd
+            _imd = new LibNitro.Intermediate.Imd.Imd
             {
                 Head = { GeneratorInfo = GeneratorInfo },
                 Body = { OriginalGeneratorInfo = GeneratorInfo }
