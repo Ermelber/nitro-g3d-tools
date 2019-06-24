@@ -154,7 +154,7 @@ namespace LibNitro.Intermediate.Imd
                             case G3dCommand.Nop:
                                 break;
                             case G3dCommand.TexCoord:
-                                ew.WriteFixedPoint(cmd.RealArgs[0],true, 11, 4);
+                                ew.WriteFixedPoint(cmd.RealArgs[0], true, 11, 4);
                                 ew.WriteFixedPoint(cmd.RealArgs[1], true, 11, 4);
                                 offset += 4;
                                 break;
@@ -186,7 +186,7 @@ namespace LibNitro.Intermediate.Imd
                                 break;
                             case G3dCommand.Color:
                                 var color = GFXUtil.ConvertColorFormat(
-                                    (uint)Color.FromArgb((int)cmd.IntArgs[0], (int)cmd.IntArgs[1], (int)cmd.IntArgs[2]).ToArgb(),
+                                    (uint)Color.FromArgb(0, (int)cmd.IntArgs[0], (int)cmd.IntArgs[1], (int)cmd.IntArgs[2]).ToArgb(),
                                     ColorFormat.ARGB8888, ColorFormat.ABGR1555);
                                 ew.Write((ushort)color);
                                 offset += 4;

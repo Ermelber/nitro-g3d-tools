@@ -31,7 +31,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\workspace\P_PC.nsbmd"));
 
 
-            _testNsbmd = new NSBMD(File.ReadAllBytes(@"testfiles\patapata.nsbmd"));
+            _testNsbmd = new NSBMD(File.ReadAllBytes(@"testfiles\koopakart.nsbmd"));
 
             GetModelSet();
             //GetTextureSet();
