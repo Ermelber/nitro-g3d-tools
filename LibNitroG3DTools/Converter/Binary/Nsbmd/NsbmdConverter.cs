@@ -28,7 +28,10 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\Models\Tracks\Retro\MK8 Animal Crossing\imd\mori_spring.nsbmd"));
             //_testNsbtx = new NSBTX(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\Models\Tracks\Retro\MK8 Animal Crossing\imd\mori_spring.nsbtx"));
 
-            _testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\workspace\P_PC.nsbmd"));
+            //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\workspace\P_PC.nsbmd"));
+
+
+            _testNsbmd = new NSBMD(File.ReadAllBytes(@"testfiles\patapata.nsbmd"));
 
             GetModelSet();
             //GetTextureSet();
@@ -43,10 +46,29 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 decoded.Add(G3dDisplayList.Decode(s.DL));
             }*/
 
-            var decoded = G3dDisplayList.Decode(_testNsbmd.ModelSet.models[0].shapes.shape[0].DL);
+            var dl = _testNsbmd.ModelSet.models[0].shapes.shape[0].DL;
+
+            var decoded = G3dDisplayList.Decode(dl);
             var decodedImd = _imd.Body.PolygonArray.Polygons[0].MatrixPrimitives[0].PrimitiveArray.GetDecodedCommands();
 
-            var encoded = G3dDisplayList.Encode(decodedImd);
+            //var encoded = G3dDisplayList.Encode(decodedImd);
+
+            var encoded = G3dDisplayList.Encode(decoded);
+
+            for (int i = 0; i < dl.Length; i++)
+            {
+                try
+                {
+                    if (dl[i] != encoded[i])
+                    {
+                        Console.WriteLine($"Different! At offset {i}: {dl[i]} {encoded[i]}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
         }
 
         public void Write(string path)

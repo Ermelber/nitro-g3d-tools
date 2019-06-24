@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using LibEndianBinaryIO;
 using LibNitro.GFX;
@@ -125,23 +126,93 @@ namespace LibNitro.Intermediate.Imd
 
             var commandQueue = new Queue<DecodedCommand>();
 
+            var nops = decoded.Count % 4 == 0 ? 0 : 4 - decoded.Count % 4;
+
+            //Add NOPs at the end
+            for (int i = 0; i < nops; i++)
+            {
+                decoded.Add(new DecodedCommand{G3dCommand = G3dCommand.Nop});
+            }
+
             foreach (var command in decoded)
             {
                 if (packed == 4)
                 {
                     packed = 0;
 
-                    var queued = commandQueue.Dequeue();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        var cmd = commandQueue.Dequeue();
+
+                        m.Position = offset;
+
+                        switch (cmd.G3dCommand)
+                        {
+                            default:
+                            case G3dCommand.PushMatrix:
+                            case G3dCommand.End:
+                            case G3dCommand.Nop:
+                                break;
+                            case G3dCommand.TexCoord:
+                                ew.WriteFixedPoint(cmd.RealArgs[0],true, 11, 4);
+                                ew.WriteFixedPoint(cmd.RealArgs[1], true, 11, 4);
+                                offset += 4;
+                                break;
+                            case G3dCommand.VertexXY:
+                            case G3dCommand.VertexXZ:
+                            case G3dCommand.VertexYZ:
+                                ew.WriteFx16s(cmd.RealArgs);
+                                offset += 4;
+                                break;
+                            case G3dCommand.Begin:
+                            case G3dCommand.RestoreMatrix:
+                                ew.Write(cmd.IntArgs[0]);
+                                offset += 4;
+                                break;
+                            case G3dCommand.VertexDiff:
+                                var vec2 = VecFx10.FromVector3((cmd.RealArgs[0] * 8, cmd.RealArgs[1] * 8, cmd.RealArgs[2]* 8));
+                                ew.Write(vec2);
+                                offset += 4;
+                                break;
+                            case G3dCommand.VertexShort:
+                                var vec3 = VecFx10.FromVector3((cmd.RealArgs[0], cmd.RealArgs[1], cmd.RealArgs[2]), 3, 6);
+                                ew.Write(vec3);
+                                offset += 4;
+                                break;
+                            case G3dCommand.Normal:
+                                var vec = VecFx10.FromVector3((cmd.RealArgs[0], cmd.RealArgs[1], cmd.RealArgs[2]));
+                                ew.Write(vec);
+                                offset += 4;
+                                break;
+                            case G3dCommand.Color:
+                                var color = GFXUtil.ConvertColorFormat(
+                                    (uint)Color.FromArgb((int)cmd.IntArgs[0], (int)cmd.IntArgs[1], (int)cmd.IntArgs[2]).ToArgb(),
+                                    ColorFormat.ARGB8888, ColorFormat.ABGR1555);
+                                ew.Write((ushort)color);
+                                offset += 4;
+                                break;
+                            case G3dCommand.Vertex:
+                                ew.WriteFx16s(cmd.RealArgs);
+                                ew.Write((ushort) 0);
+                                offset += 8;
+                                break;
+                        }
+                    }
                 }
+
+                m.Position = offset;
 
                 commandQueue.Enqueue(command);
                 ew.Write((byte) command.G3dCommand);
                 packed++;
+                offset++;
             }
+
+            var dl = m.ToArray();
 
             m.Close();
 
-            return null;
+            return dl;
         }
         
         public static List<DecodedCommand> Decode(byte[] dl)
@@ -169,6 +240,7 @@ namespace LibNitro.Intermediate.Imd
                 G3dCommand cmd = commandQueue.Dequeue();
                 switch (cmd)
                 {
+                    default:
                     case G3dCommand.PushMatrix:
                     case G3dCommand.End:
                         decoded.Add(new DecodedCommand { G3dCommand = cmd } );
@@ -213,7 +285,7 @@ namespace LibNitro.Intermediate.Imd
                         offset += 4;
                         break;
                     case G3dCommand.Color:
-                        var color = System.Drawing.Color.FromArgb((int) GFXUtil.ConvertColorFormat(er.ReadUInt32(),
+                        var color = Color.FromArgb((int) GFXUtil.ConvertColorFormat(er.ReadUInt32(),
                             ColorFormat.ABGR1555, ColorFormat.ARGB8888));
                         decoded.Add(new DecodedCommand { G3dCommand = cmd, IntArgs = new uint[] { color.R, color.G, color.B}});
                         offset += 4;
