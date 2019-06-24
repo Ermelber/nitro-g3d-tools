@@ -188,7 +188,7 @@ namespace LibNitro.Intermediate.Imd
                                 var color = GFXUtil.ConvertColorFormat(
                                     (uint)Color.FromArgb(0, (int)cmd.IntArgs[0], (int)cmd.IntArgs[1], (int)cmd.IntArgs[2]).ToArgb(),
                                     ColorFormat.ARGB8888, ColorFormat.ABGR1555);
-                                ew.Write((ushort)color);
+                                ew.Write(color);
                                 offset += 4;
                                 break;
                             case G3dCommand.Vertex:

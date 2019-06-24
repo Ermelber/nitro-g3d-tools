@@ -54,8 +54,9 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             //var encoded = G3dDisplayList.Encode(decodedImd);
 
             var encoded = G3dDisplayList.Encode(decoded);
+            var encoded2 = G3dDisplayList.Encode(decodedImd);
 
-            for (int i = 0; i < dl.Length; i++)
+            /*for (int i = 0; i < dl.Length; i++)
             {
                 try
                 {
@@ -68,7 +69,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 {
                     Console.WriteLine(e);
                 }
-            }
+            }*/
         }
 
         public void Write(string path)
