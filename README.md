@@ -6,6 +6,8 @@ Install Visual Studio and build the solution. You need .NET Framework v4.7 in or
 Or just download the binaries here.
 
 # Dependencies
-You might need to reinstall [Assimp's Nuget Package](https://www.nuget.org/packages/AssimpNet/) (on ``LibNitroG3DTools``).
+Visual Studio should download the Nuget Packages when you build the solution.
+
+If it doesn't, just reinstall [Assimp's Nuget Package](https://www.nuget.org/packages/AssimpNet/) (on ``LibNitroG3DTools``).
 
 ```Install-Package AssimpNet -Version 4.1.0```
