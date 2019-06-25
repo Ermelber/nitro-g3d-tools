@@ -12,6 +12,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         private NSBMD _nsbmd;
         private NSBTX _nsbtx = null;
         private Imd _imd;
+        private string _imdName;
 
         private NSBMD _testNsbmd;
         private NSBTX _testNsbtx;
@@ -23,6 +24,8 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             if (!ImdChecker(_imd))
                 throw new InvalidDataException("IMD file has errors inside.");
 
+            _imdName = Path.GetFileNameWithoutExtension(path);
+
             _nsbmd = new NSBMD(false);
 
             //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\Models\Tracks\Retro\MK8 Animal Crossing\imd\mori_spring.nsbmd"));
@@ -31,7 +34,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\workspace\P_PC.nsbmd"));
 
 
-            _testNsbmd = new NSBMD(File.ReadAllBytes(@"testfiles\koopakart.nsbmd"));
+            _testNsbmd = new NSBMD(File.ReadAllBytes(@"testfiles\patapata.nsbmd"));
 
             GetModelSet();
             //GetTextureSet();
@@ -70,6 +73,8 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                     Console.WriteLine(e);
                 }
             }*/
+
+            File.WriteAllBytes("testfiles/test.nsbmd",_nsbmd.Write());
         }
 
         public void Write(string path)
@@ -128,6 +133,8 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
 
         private void GetModelSet()
         {
+            _nsbmd.ModelSet.dict = new Dictionary<MDL0.MDL0Data>();
+            _nsbmd.ModelSet.dict.Add(_imdName, new MDL0.MDL0Data());
             _nsbmd.ModelSet.models = new[] { MdlUtils.GetModel(_imd) };
         }
 

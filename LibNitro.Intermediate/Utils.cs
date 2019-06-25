@@ -1,12 +1,28 @@
-﻿using System.Globalization;
+﻿using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using LibEndianBinaryIO;
+using LibNitro.GFX;
 
 namespace LibNitro.Intermediate
 {
     public static class Utils
     {
+        public static ushort StringColorToXBGR(string c)
+        {
+            var rgbVals = new[]
+            {
+                byte.Parse(c.Split(' ')[0]) * 8,
+                byte.Parse(c.Split(' ')[1]) * 8,
+                byte.Parse(c.Split(' ')[2]) * 8
+            };
+
+            var color = (ushort)GFXUtil.ConvertColorFormat((uint)Color.FromArgb(rgbVals[0], rgbVals[1], rgbVals[2]).ToArgb(),
+                ColorFormat.ARGB8888, ColorFormat.ABGR1555);
+
+            return color;
+        }
         public static byte[] StringDataToBytes(string text)
         {
             var split = Regex.Replace(Regex.Replace(text, @"(\\.)", " "), @"\s+", " ").Trim().Split(' ');

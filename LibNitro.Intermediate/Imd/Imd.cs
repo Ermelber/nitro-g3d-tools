@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using System.Xml.Serialization;
 using LibFoundation.Math;
+using LibNitro.GFX;
 
 namespace LibNitro.Intermediate.Imd
 {
@@ -278,11 +280,19 @@ namespace LibNitro.Intermediate.Imd
 
         [XmlAttribute("diffuse")] public string Diffuse = "31 31 31";
 
+        public ushort GetDiffuse() => Utils.StringColorToXBGR(Diffuse);
+
         [XmlAttribute("ambient")] public string Ambient = "31 31 31";
+
+        public ushort GetAmbient() => Utils.StringColorToXBGR(Ambient);
 
         [XmlAttribute("specular")] public string Specular = "0 0 0";
 
+        public ushort GetSpecular() => Utils.StringColorToXBGR(Specular);
+
         [XmlAttribute("emission")] public string Emission = "0 0 0";
+
+        public ushort GetEmission() => Utils.StringColorToXBGR(Emission);
 
         [XmlAttribute("shininess_table_flag")] public string ShininessTableFlag = "off";
 

@@ -12,30 +12,32 @@ namespace BinaryConverter
             //This is needed to conform to a single standard for decimal numbers
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 
+            if (args.Length > 0)
+            {
+                //var settings = ConversionSettings.GetArguments(args, out var outPath);
+
+                string outPath = null;
+
+                if (outPath == null)
+                    outPath = Path.Combine(Path.GetDirectoryName(args[0].Replace("\"", String.Empty)),
+                        Path.GetFileNameWithoutExtension(args[0]) + ".nsbmd");
+
+                /*if (settings.Verbose)*/
+                Console.WriteLine($"\nInput: {args[0]}\nOutput: {outPath}");
+
+                var a = new NsbmdConverter(args[0]);
+
+                //a.Write(outPath);
+
+                /*if (settings.Verbose)*/
+                Console.WriteLine("Success!");
+
+                return;
+            }
+
             try
             {
-                if (args.Length > 0)
-                {
-                    //var settings = ConversionSettings.GetArguments(args, out var outPath);
-
-                    string outPath = null;
-
-                    if (outPath == null)
-                        outPath = Path.Combine(Path.GetDirectoryName(args[0].Replace("\"", String.Empty)),
-                            Path.GetFileNameWithoutExtension(args[0]) + ".nsbmd");
-                    
-                    /*if (settings.Verbose)*/
-                        Console.WriteLine($"\nInput: {args[0]}\nOutput: {outPath}");
-
-                    var a = new NsbmdConverter(args[0]);
-
-                    //a.Write(outPath);
-
-                    /*if (settings.Verbose)*/
-                        Console.WriteLine("Success!");
-
-                    return;
-                }
+                
             }
             catch (Exception e)
             {
