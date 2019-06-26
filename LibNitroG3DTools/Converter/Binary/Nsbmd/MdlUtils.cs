@@ -1,5 +1,4 @@
-﻿using System;
-using LibNitro.G3D.BinRes;
+﻿using LibNitro.G3D.BinRes;
 using LibNitro.Intermediate.Imd;
 using static LibNitro.G3D.BinRes.MDL0;
 using static LibNitro.G3D.BinRes.MDL0.Model;
@@ -21,10 +20,36 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 nodes = GetNodeSet(imd),
                 materials = GetMaterialSet(imd),
                 shapes = GetShapeSet(imd),
-                //Todo: SBC
+                sbc = GetSbc(imd)
             };
 
             return model;
+        }
+
+        private static byte[] GetSbc(Imd imd)
+        {
+            var w = new Sbc();
+            w.NODEDESC(0, 0xFF, false, false, 0, -1);
+            w.NODE(0, true);
+            w.POSSCALE(true);
+
+            foreach (var display in imd.Body.NodeArray.Nodes[0].Displays)
+            {
+                w.MAT((byte)display.Material);
+                w.SHP((byte)display.Polygon);
+            }
+
+            /*for (int i = 0; i < imd.Body.NodeArray.Nodes[0].Displays.Count; i++)
+            {
+                w.MAT((byte)i);
+                w.SHP((byte)i);
+            }*/
+
+            w.POSSCALE(false);
+            w.RET();
+            w.NOP();
+
+            return w.GetData();
         }
 
         private static Model.ModelInfo GetModelInfo(Imd imd)
