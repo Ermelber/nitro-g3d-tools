@@ -58,6 +58,8 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             var encoded = G3dDisplayList.Encode(decoded);
             var encoded2 = G3dDisplayList.Encode(decodedImd);
 
+            var sbc = new Sbc(_testNsbmd.ModelSet.models[0].sbc);
+
             /*for (int i = 0; i < dl.Length; i++)
             {
                 try

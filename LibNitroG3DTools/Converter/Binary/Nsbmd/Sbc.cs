@@ -10,11 +10,12 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         public class Command
         {
             public Commands Type;
-            public List<byte> Params;
+            public byte ByteType;
+            public List<byte> Params = new List<byte>();
 
             public void Write(EndianBinaryWriterEx ew)
             {
-                ew.Write((byte) Type);
+                ew.Write(ByteType);
                 ew.Write(Params.ToArray(), 0, Params.Count);
             }
 
@@ -41,19 +42,34 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                         RET();
                         break;
                     case Commands.Node:
-                        //NODE();
+                        NODE(sbc[i + 1], sbc[i + 2] == 1);
+                        i += 2;
                         break;
                     case Commands.Mtx:
+                        MTX(sbc[i + 1]);
+                        i++;
                         break;
                     case Commands.Mat:
+                        MAT(sbc[i + 1]);
+                        i++;
                         break;
                     case Commands.Nodedesc:
+                        //todo
+                        NODEDESC(sbc[i + 1], sbc[i + 2], sbc[i + 3] == 1, sbc[i + 4] == 1, sbc[i + 6]);
+                        i += 6;
                         break;
                     case Commands.BB:
+                        //todo
+                        BB(sbc[i + 1]);
+                        i += 3;
                         break;
                     case Commands.BBY:
+                        //todo
+                        BBY(sbc[i + 1]);
+                        i += 3;
                         break;
                     case Commands.Nodemix:
+                        //
                         break;
                     case Commands.CallDl:
                         break;
@@ -64,7 +80,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                     case Commands.Prjmap:
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        break;
                 }
             }
         }
@@ -76,6 +92,13 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         /// </summary>
         public void NOP()
         {
+            CommandList.Add(new Command
+            {
+                Type = Commands.Nop, ByteType = (byte)Commands.Nop
+            });
+
+
+
             Data.Add((byte) Commands.Nop);
         }
         /// <summary>
@@ -83,6 +106,12 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         /// </summary>
         public void RET()
         {
+            CommandList.Add(new Command
+            {
+                Type = Commands.Ret,
+                ByteType = (byte)Commands.Ret
+            });
+
             Data.Add((byte) Commands.Ret);
         }
         /// <summary>
@@ -92,6 +121,17 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         /// <param name="V">True when shape belonging to NodeID is visible. False when it is invisible.</param>
         public void NODE(byte NodeID, bool V)
         {
+            var c = new Command
+            {
+                Type = Commands.Node,
+                ByteType = (byte) Commands.Node
+            };
+            c.Params.Add(NodeID);
+            c.Params.Add((byte)(V ? 1 : 0));
+
+            CommandList.Add(c);
+
+            //old
             Data.Add((byte) Commands.Node);
             Data.Add(NodeID);
             Data.Add((byte)(V ? 1 : 0));
@@ -102,6 +142,15 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         /// <param name="Idx">Matrix stack index.</param>
         public void MTX(byte Idx)
         {
+            var c = new Command
+            {
+                Type = Commands.Mtx,
+                ByteType = (byte)Commands.Mtx
+            };
+            c.Params.Add(Idx);
+
+            CommandList.Add(c);
+
             Data.Add(3);
             Data.Add(Idx);
         }
@@ -111,6 +160,15 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         /// <param name="MatID">Material ID</param>
         public void MAT(byte MatID)
         {
+            var c = new Command
+            {
+                Type = Commands.Mat,
+                ByteType = 4 | (1 << 5)
+            };
+            c.Params.Add(MatID);
+
+            CommandList.Add(c);
+
             Data.Add(4 | (1 << 5));
             Data.Add(MatID);
         }
