@@ -63,6 +63,9 @@
     <Compile Include="Converter\Binary\Nsbmd\MdlUtils.cs" />
     <Compile Include="Converter\Binary\Nsbmd\TexUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Stripping\Primitive.cs" />
+    <Compile Include="Stripping\QuadStripper.cs" />
+    <Compile Include="Stripping\TriStripper.cs" />
     <Compile Include="Texture\Texture.cs" />
   </ItemGroup>
   <ItemGroup>

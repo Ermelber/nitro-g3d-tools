@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Assimp;
 using LibFoundation.Math;
 using LibNitro.Intermediate;
 using LibNitro.Intermediate.Imd;
+using LibNitroG3DTools.Stripping;
 using Material = LibNitro.Intermediate.Imd.Material;
 using Node = LibNitro.Intermediate.Imd.Node;
+using Primitive = LibNitro.Intermediate.Imd.Primitive;
 
 namespace LibNitroG3DTools.Converter.Intermediate.Imd
 {
@@ -14,41 +17,42 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
     {
         public static readonly GeneratorInfo GeneratorInfo = new GeneratorInfo
         {
-            Name = "ASS to IMD (Made by Ermelber)",
+            Name    = "ASS to IMD (Made by Ermelber)",
             Version = "0.2.5"
         };
 
         private readonly ImdConverterSettings _settings;
-        private readonly Scene _scene;
-        private ModelBounds _bounds;
+        private readonly Scene                _scene;
+        private          ModelBounds          _bounds;
 
         ///Key: Mesh Id, Value: List of vertices
         private Dictionary<int, List<Vector3>> _meshes = new Dictionary<int, List<Vector3>>();
+
         private readonly string _modelDirectory;
 
         private LibNitro.Intermediate.Imd.Imd _imd;
 
         private void GetPosScales()
         {
-            _bounds = ModelBounds.Calculate(_meshes);
+            _bounds                      = ModelBounds.Calculate(_meshes);
             _imd.Body.ModelInfo.PosScale = _bounds.GetPosScale();
-            _imd.Body.BoxTest.PosScale = _bounds.GetBoxPosScale();
+            _imd.Body.BoxTest.PosScale   = _bounds.GetBoxPosScale();
 
             Vector3 xyz =
-                (((int)Math.Round(_bounds.BoxXyz.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                ((int)Math.Round(_bounds.BoxXyz.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                ((int)Math.Round(_bounds.BoxXyz.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
+                (((int) Math.Round(_bounds.BoxXyz.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+                    ((int) Math.Round(_bounds.BoxXyz.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+                    ((int) Math.Round(_bounds.BoxXyz.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
 
             Vector3 whd =
-                (((int)Math.Round(_bounds.BoxWhd.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                ((int)Math.Round(_bounds.BoxWhd.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                ((int)Math.Round(_bounds.BoxWhd.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
+                (((int) Math.Round(_bounds.BoxWhd.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+                    ((int) Math.Round(_bounds.BoxWhd.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+                    ((int) Math.Round(_bounds.BoxWhd.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
 
             //_imd.Body.BoxTest.Xyz = $"{xyz.X} {xyz.Y} {xyz.Z}";
             //_imd.Body.BoxTest.Whd = $"{whd.X} {whd.Y} {whd.Z}";
 
             _imd.Body.BoxTest.Position = xyz;
-            _imd.Body.BoxTest.Size = whd;
+            _imd.Body.BoxTest.Size     = whd;
         }
 
         private void GetTextures()
@@ -56,7 +60,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             var palettes = new List<TexPalette>();
             var textures = new List<TexImage>();
 
-            int texId = 0;
+            int texId     = 0;
             int paletteId = 0;
 
             if (_scene.HasTextures)
@@ -83,7 +87,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                         var texPath = Path.GetFullPath(Path.Combine(_modelDirectory,
                             tex.FilePath.Substring(0, 2) == "//" ? tex.FilePath.Remove(0, 2) : tex.FilePath));
                         var texName = Path.GetFileNameWithoutExtension(texPath);
-                        
+
 
                         //Prevents doubled textures
                         bool repeated = false;
@@ -95,6 +99,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                                 break;
                             }
                         }
+
                         if (repeated) continue;
 
                         var texture = new Texture.Texture(texPath);
@@ -106,27 +111,27 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
                         var texImage = new TexImage
                         {
-                            Index = texId++,
-                            Name = texture.TextureName,
-                            Path = texPath,
+                            Index  = texId++,
+                            Name   = texture.TextureName,
+                            Path   = texPath,
                             Height = texture.Height,
-                            Width = texture.Width,
+                            Width  = texture.Width,
                             Bitmap = new TexBitmap
                             {
-                                Size = texture.BitmapSize,
+                                Size  = texture.BitmapSize,
                                 Value = texture.BitmapData
                             },
-                            Format = texture.Format,
+                            Format         = texture.Format,
                             OriginalHeight = texture.Height,
-                            OriginalWidth = texture.Width,
-                            PaletteName = texture.PaletteName
+                            OriginalWidth  = texture.Width,
+                            PaletteName    = texture.PaletteName
                         };
 
                         if (texture.Format == "tex4x4")
                         {
                             texImage.Tex4x4PaletteIndex = new Tex4x4PaletteIndex
                             {
-                                Size = texture.Tex4x4PaletteIndexSize,
+                                Size  = texture.Tex4x4PaletteIndexSize,
                                 Value = texture.Tex4x4PaletteIndexData
                             };
                         }
@@ -143,9 +148,9 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                             palettes.Add(new TexPalette
                             {
                                 ColorSize = texture.PaletteSize,
-                                Index = paletteId++,
-                                Name = texture.PaletteName,
-                                Value = texture.PaletteData
+                                Index     = paletteId++,
+                                Name      = texture.PaletteName,
+                                Value     = texture.PaletteData
                             });
                         }
                     }
@@ -161,20 +166,35 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             }
         }
 
-        private void GetMaterials()
+        private Dictionary<int, int> GetMaterials()
         {
+            var matMap = new Dictionary<int, int>();
             int i = 0;
+            int j = 0;
             foreach (var mat in _scene.Materials)
             {
+                if (_scene.Meshes.All(a => a.MaterialIndex != j))
+                {
+                    j++;
+                    continue;
+                }
+
+                matMap.Add(j, i);
                 var material = new Material
                 {
                     Index = i,
-                    Name = mat.Name.Length > 16 ? $"{mat.Name.Substring(0, 13)}{i}" : mat.Name, //Fixes the length of the material name
-                    Alpha = (byte)(mat.Opacity * 31),
-                    Ambient = $"{(int)(mat.ColorAmbient.R * 31)} {(int)(mat.ColorAmbient.G * 31)} {(int)(mat.ColorAmbient.B * 31)}",
-                    Diffuse = $"{(int)(mat.ColorDiffuse.R * 31)} {(int)(mat.ColorDiffuse.G * 31)} {(int)(mat.ColorDiffuse.B * 31)}",
-                    Emission = $"{(int)(mat.ColorEmissive.R * 31)} {(int)(mat.ColorEmissive.G * 31)} {(int)(mat.ColorEmissive.B * 31)}",
-                    Specular = $"{(int)(mat.ColorSpecular.R * 31)} {(int)(mat.ColorSpecular.G * 31)} {(int)(mat.ColorSpecular.B * 31)}",
+                    Name = mat.Name.Length > 16
+                        ? $"{mat.Name.Substring(0, 13)}{i}"
+                        : mat.Name, //Fixes the length of the material name
+                    Alpha = (byte) (mat.Opacity * 31),
+                    Ambient =
+                        $"{(int) (mat.ColorAmbient.R * 31)} {(int) (mat.ColorAmbient.G * 31)} {(int) (mat.ColorAmbient.B * 31)}",
+                    Diffuse =
+                        $"{(int) (mat.ColorDiffuse.R * 31)} {(int) (mat.ColorDiffuse.G * 31)} {(int) (mat.ColorDiffuse.B * 31)}",
+                    Emission =
+                        $"{(int) (mat.ColorEmissive.R * 31)} {(int) (mat.ColorEmissive.G * 31)} {(int) (mat.ColorEmissive.B * 31)}",
+                    Specular =
+                        $"{(int) (mat.ColorSpecular.R * 31)} {(int) (mat.ColorSpecular.G * 31)} {(int) (mat.ColorSpecular.B * 31)}",
                     Light0 = _settings.NoLightOnMaterials ? "off" : "on"
                 };
 
@@ -202,8 +222,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                             ? "clamp"
                             : "repeat";
 
-                    material.TexScale = "1.0000 1.0000";
-                    material.TexRotate = "0.0000";
+                    material.TexScale     = "1.0000 1.0000";
+                    material.TexRotate    = "0.0000";
                     material.TexTranslate = "0.0000 0.0000";
 
                     material.TexGenMode = "none";
@@ -212,22 +232,24 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 _imd.Body.MaterialArray.Materials.Add(material);
 
                 i++;
+                j++;
             }
 
-            _imd.Body.ModelInfo.MaterialSize = $"{_scene.MaterialCount} {_scene.MaterialCount}";
+            _imd.Body.ModelInfo.MaterialSize = $"{matMap.Count} {matMap.Count}";
+            return matMap;
         }
 
         private void GetMatrices()
         {
             _imd.Body.MatrixArray.Matrices.Add(new Matrix
             {
-                Index = 0,
+                Index        = 0,
                 MatrixWeight = 1,
-                NodeIndex = 0
+                NodeIndex    = 0
             });
         }
 
-        private void GetPolygons()
+        private void GetPolygons(Dictionary<int, int> matMap)
         {
             if (_settings.UsePrimitiveStrip) throw new NotSupportedException("Primitive Strip isn't supported yet");
 
@@ -237,11 +259,12 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             var polygonId = 0;
             foreach (var mesh in _meshes)
             {
-                var meshId = mesh.Key;
-                var sceneMesh = _scene.Meshes[meshId];
-                var materialId = sceneMesh.MaterialIndex;
-                var material = _imd.Body.MaterialArray.Materials[materialId];
-                var useNormals = material.Light0 == "on" || material.Light1 == "on" || material.Light2 == "on" || material.Light3 == "on";
+                var meshId     = mesh.Key;
+                var sceneMesh  = _scene.Meshes[meshId];
+                var materialId = matMap[sceneMesh.MaterialIndex];
+                var material   = _imd.Body.MaterialArray.Materials[materialId];
+                var useNormals = material.Light0 == "on" || material.Light1 == "on" || material.Light2 == "on" ||
+                                 material.Light3 == "on";
 
                 var texture = material.TexImageIdx != -1
                     ? _imd.Body.TexImageArray.TexImages[material.TexImageIdx]
@@ -250,7 +273,10 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 var polygon = new Polygon
                 {
                     Index = polygonId,
-                    Name = $"polygon{polygonId}",
+                    Name  = $"polygon{polygonId}",
+                    ClrFlag = !useNormals && sceneMesh.HasVertexColors(0) ? "on" : "off",
+                    TexFlag = texture != null ? "on" : "off",
+                    NrmFlag = useNormals ? "on" : "off",
                 };
 
                 var matrixPrimitive = new MatrixPrimitive
@@ -263,91 +289,221 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 };
                 polygon.MatrixPrimitives.Add(matrixPrimitive);
 
-                //Previous values
-                var col = new Color4D(1, 1, 1);
-                int prevX = 0;
-                int prevY = 0;
-                int prevZ = 0;
+                var finalPrimList = new List<Primitive>();
 
-                Primitive quadPrimitive = new Primitive { Type = "quads" };
-                Primitive triPrimitive = new Primitive { Type = "triangles" };
-
-                var primitive = triPrimitive;
-                int prevIndexCount = 0;
-
+                var primList = new List<Stripping.Primitive>();
+                var posList  = new Dictionary<(int x, int y, int z), int>();
+                var clrList  = new Dictionary<(int r, int g, int b), int>();
+                var texList  = new Dictionary<(int s, int t), int>();
+                var nrmList  = new Dictionary<(int x, int y, int z), int>();
                 foreach (var face in sceneMesh.Faces)
                 {
+                    var prim = new Stripping.Primitive();
                     if (face.IndexCount == 3)
                     {
-                        primitive = triPrimitive;
+                        prim.Type = Stripping.Primitive.PrimitiveType.Triangles;
+                        polygon.TriangleSize++;
                     }
                     else if (face.IndexCount == 4)
                     {
-                        primitive = quadPrimitive;
+                        prim.Type = Stripping.Primitive.PrimitiveType.Quads;
+                        polygon.QuadSize++;
                     }
-                    else continue; //Other shapes????!
+                    else
+                        continue; //Other shapes????!
+
+                    polygon.PolygonSize++;
 
                     foreach (var vertexIndex in face.Indices)
                     {
                         var vertex = _meshes[meshId][vertexIndex];
 
+                        prim.Matrices.Add(-1);
+
                         //Vertex Colors
-                        if (sceneMesh.HasVertexColors(0) && (col == new Color4D(1, 1, 1) || col != sceneMesh.VertexColorChannels[0][vertexIndex]))
+                        if (!useNormals && sceneMesh.HasVertexColors(0))
                         {
-                            col = sceneMesh.VertexColorChannels[0][vertexIndex];
-                            primitive.Commands.Add(new ColorCommand(col.R, col.G, col.B));
+                            var c = sceneMesh.VertexColorChannels[0][vertexIndex];
+                            var clr = ((int) Math.Round(c.R * 31), (int) Math.Round(c.G * 31), (int) Math.Round(c.B * 31));
+
+                            int clrIdx = clrList.Count;
+                            if (clrList.ContainsKey(clr))
+                                clrIdx = clrList[clr];
+                            else
+                                clrList.Add(clr, clrIdx);
+                            prim.Colors.Add(clrIdx);
                         }
+                        else
+                            prim.Colors.Add(-1);
+
+
 
                         //Texture Coordinates
                         if (texture != null)
                         {
                             var texCoord = sceneMesh.TextureCoordinateChannels[0][vertexIndex];
-                            primitive.Commands.Add(new TextureCoordCommand(texCoord.X, texCoord.Y, texture.Width, texture.Height));
+                            var texC = ((int) Math.Round(texCoord.X * texture.Width * 16),
+                                (int) Math.Round((-texCoord.Y * texture.Height + texture.Height) * 16));
+
+                            int texIdx = texList.Count;
+                            if (texList.ContainsKey(texC))
+                                texIdx = texList[texC];
+                            else
+                                texList.Add(texC, texIdx);
+                            prim.TexCoords.Add(texIdx);
                         }
+                        else
+                            prim.TexCoords.Add(-1);
 
                         //Normals
                         if (useNormals)
                         {
                             var normal = sceneMesh.Normals[vertexIndex];
-                            primitive.Commands.Add(new NormalCommand(new Vector3(normal.X, normal.Y, normal.Z)));
-                        }
+                            int nx     = (int) Math.Round(normal.X * 512) & 0x3FF;
+                            if (nx == 512)
+                                nx--;
+                            int ny = (int) Math.Round(normal.Y * 512) & 0x3FF;
+                            if (ny == 512)
+                                ny--;
+                            int nz = (int) Math.Round(normal.Z * 512) & 0x3FF;
+                            if (nz == 512)
+                                nz--;
+                            var nrm = (nx, ny, nz);
 
-                        //Vertex
-                        var x = (int)Math.Round(vertex.X * 4096) >> posScale;
-                        var y = (int)Math.Round(vertex.Y * 4096) >> posScale;
-                        var z = (int)Math.Round(vertex.Z * 4096) >> posScale;
-                        var scaledVtx = (x / 4096f, y / 4096f, z / 4096f);
-
-                        var diffX = x - prevX; var diffY = y - prevY; var diffZ = z - prevZ;
-                        var diff = (diffX / 4096f, diffY / 4096f, diffZ / 4096f);
-
-                        if (vertexIndex != 0 && prevIndexCount == face.IndexCount && diffX == 0)
-                        {
-                            primitive.Commands.Add(new PosYzCommand(scaledVtx));
-                        }
-                        else if (vertexIndex != 0 && prevIndexCount == face.IndexCount && diffY == 0)
-                        {
-                            primitive.Commands.Add(new PosXzCommand(scaledVtx));
-                        }
-                        else if (vertexIndex != 0 && prevIndexCount == face.IndexCount && diffZ == 0)
-                        {
-                            primitive.Commands.Add(new PosXyCommand(scaledVtx));
-                        }
-                        else if (vertexIndex != 0 && prevIndexCount == face.IndexCount &&
-                                    diffX < 512 && diffX > -512 &&
-                                    diffY < 512 && diffY > -512 &&
-                                    diffZ < 512 && diffZ > -512)
-                        {
-                            primitive.Commands.Add(new PosDiffCommand(diff));
-                        }
-                        else if ((x & 0x3F) == 0 && (y & 0x3F) == 0 && (z & 0x3F) == 0)
-                        {
-                            primitive.Commands.Add(new PosShortCommand(scaledVtx));
+                            int nrmIdx = nrmList.Count;
+                            if (nrmList.ContainsKey(nrm))
+                                nrmIdx = nrmList[nrm];
+                            else
+                                nrmList.Add(nrm, nrmIdx);
+                            prim.Normals.Add(nrmIdx);
                         }
                         else
+                            prim.Normals.Add(-1);
+
+                        //Vertex
+                        int x      = (int) Math.Round(vertex.X * 4096) >> posScale;
+                        int y      = (int) Math.Round(vertex.Y * 4096) >> posScale;
+                        int z      = (int) Math.Round(vertex.Z * 4096) >> posScale;
+                        var comb   = (x, y, z);
+                        int posIdx = posList.Count;
+                        if (posList.ContainsKey(comb))
+                            posIdx = posList[comb];
+                        else
+                            posList.Add(comb, posIdx);
+                        prim.Positions.Add(posIdx);
+                    }
+
+                    prim.VertexCount = face.IndexCount;
+                    primList.Add(prim);
+                }
+
+                var poss = posList.Keys.ToArray();
+                var clrs = clrList.Keys.ToArray();
+                var texs = texList.Keys.ToArray();
+                var nrms = nrmList.Keys.ToArray();
+
+                var newPrims = QuadStripper.Process(primList.ToArray());
+                newPrims = TriStripper.Process(newPrims);
+
+                //merge all tris and quads
+                {
+                    var tmp = new List<Stripping.Primitive>(newPrims.Where(a =>
+                        a.Type == Stripping.Primitive.PrimitiveType.TriangleStrip ||
+                        a.Type == Stripping.Primitive.PrimitiveType.QuadStrip));
+                    var tris  = new Stripping.Primitive {Type = Stripping.Primitive.PrimitiveType.Triangles};
+                    var quads = new Stripping.Primitive {Type = Stripping.Primitive.PrimitiveType.Quads};
+                    foreach (var p in newPrims)
+                    {
+                        if (p.Type == Stripping.Primitive.PrimitiveType.Triangles)
                         {
-                            primitive.Commands.Add(new PosXyzCommand(scaledVtx));
+                            tris.AddVtx(p, 0);
+                            tris.AddVtx(p, 1);
+                            tris.AddVtx(p, 2);
                         }
+                        else if(p.Type == Stripping.Primitive.PrimitiveType.Quads)
+                        {
+                            quads.AddVtx(p, 0);
+                            quads.AddVtx(p, 1);
+                            quads.AddVtx(p, 2);
+                            quads.AddVtx(p, 3);
+                        }
+                    }
+                    if(tris.VertexCount != 0)
+                        tmp.Add(tris);
+                    if(quads.VertexCount != 0)
+                        tmp.Add(quads);
+                    newPrims = tmp.ToArray();
+                }
+
+                Array.Sort(newPrims);
+
+                foreach (var prim in newPrims)
+                {
+                    var primitive = new Primitive();
+                    switch (prim.Type)
+                    {
+                        case Stripping.Primitive.PrimitiveType.Triangles:
+                            primitive.Type = "triangles";
+                            break;
+                        case Stripping.Primitive.PrimitiveType.Quads:
+                            primitive.Type = "quads";
+                            break;
+                        case Stripping.Primitive.PrimitiveType.TriangleStrip:
+                            primitive.Type = "triangle_strip";
+                            break;
+                        case Stripping.Primitive.PrimitiveType.QuadStrip:
+                            primitive.Type = "quad_strip";
+                            break;
+                        default:
+                            throw new Exception("Unexpected primitive type!");
+                    }
+
+                    int prevX      = 0;
+                    int prevY      = 0;
+                    int prevZ      = 0;
+                    int prevClrIdx = -1;
+
+                    for (int i = 0; i < prim.VertexCount; i++)
+                    {
+                        if (texture != null)
+                            primitive.Commands.Add(new TextureCoordCommand(texs[prim.TexCoords[i]].s / 16f,
+                                texs[prim.TexCoords[i]].t / 16f));
+
+                        if (useNormals)
+                            primitive.Commands.Add(new NormalCommand((nrms[prim.Normals[i]].x / 512f,
+                                nrms[prim.Normals[i]].y / 512f, nrms[prim.Normals[i]].z / 512f)));
+                        else if (!useNormals && sceneMesh.HasVertexColors(0) && prevClrIdx != prim.Colors[i])
+                        {
+                            primitive.Commands.Add(new ColorCommand(clrs[prim.Colors[i]].r, clrs[prim.Colors[i]].g,
+                                clrs[prim.Colors[i]].b));
+                            prevClrIdx = prim.Colors[i];
+                        }
+
+                        int x         = poss[prim.Positions[i]].x;
+                        int y         = poss[prim.Positions[i]].y;
+                        int z         = poss[prim.Positions[i]].z;
+                        var scaledVtx = (x / 4096f, y / 4096f, z / 4096f);
+
+                        var diffX = x - prevX;
+                        var diffY = y - prevY;
+                        var diffZ = z - prevZ;
+                        var diff  = (diffX / 4096f, diffY / 4096f, diffZ / 4096f);
+
+                        if (i != 0 && diffX == 0)
+                            primitive.Commands.Add(new PosYzCommand(scaledVtx));
+                        else if (i != 0 && diffY == 0)
+                            primitive.Commands.Add(new PosXzCommand(scaledVtx));
+                        else if (i != 0 && diffZ == 0)
+                            primitive.Commands.Add(new PosXyCommand(scaledVtx));
+                        else if (i != 0 &&
+                                 diffX < 512 && diffX >= -512 &&
+                                 diffY < 512 && diffY >= -512 &&
+                                 diffZ < 512 && diffZ >= -512)
+                            primitive.Commands.Add(new PosDiffCommand(diff));
+                        else if ((x & 0x3F) == 0 && (y & 0x3F) == 0 && (z & 0x3F) == 0)
+                            primitive.Commands.Add(new PosShortCommand(scaledVtx));
+                        else
+                            primitive.Commands.Add(new PosXyzCommand(scaledVtx));
 
                         prevX = x;
                         prevY = y;
@@ -357,56 +513,34 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                         primitive.VertexSize++;
                     }
 
-
-                    polygon.PolygonSize++;
-
-                    if (face.IndexCount == 3)
-                    {
-                        polygon.TriangleSize++;
-                    }
-                    else if (face.IndexCount == 4)
-                    {
-                        polygon.QuadSize++;
-                    }
-
-                    prevIndexCount = face.IndexCount;
+                    primitive.Index = finalPrimList.Count;
+                    finalPrimList.Add(primitive);
                 }
 
-                if (polygon.VertexSize == 0) continue;
+                if (finalPrimList.Count == 0)
+                    continue;
 
-                if (polygon.QuadSize != 0)
-                {
-                    quadPrimitive.Commands.Insert(0, new MatrixCommand { Index = 0 });
+                finalPrimList[0].Commands.Insert(0, new MatrixCommand {Index = 0});
 
-                    quadPrimitive.Index = matrixPrimitive.PrimitiveArray.Primitives.Count;
-                    matrixPrimitive.PrimitiveArray.Primitives.Add(quadPrimitive);
-                }
-                if (polygon.TriangleSize != 0)
-                {
-                    if (polygon.QuadSize == 0) triPrimitive.Commands.Insert(0, new MatrixCommand { Index = 0 });
-
-                    triPrimitive.Index = matrixPrimitive.PrimitiveArray.Primitives.Count;
-                    matrixPrimitive.PrimitiveArray.Primitives.Add(triPrimitive);
-                }
-
+                matrixPrimitive.PrimitiveArray.Primitives.AddRange(finalPrimList);
 
                 _imd.Body.PolygonArray.Polygons.Add(polygon);
-                _imd.Body.OutputInfo.PolygonSize += polygon.PolygonSize;
+                _imd.Body.OutputInfo.PolygonSize  += polygon.PolygonSize;
                 _imd.Body.OutputInfo.TriangleSize += polygon.TriangleSize;
-                _imd.Body.OutputInfo.QuadSize += polygon.QuadSize;
-                _imd.Body.OutputInfo.VertexSize += polygon.VertexSize;
+                _imd.Body.OutputInfo.QuadSize     += polygon.QuadSize;
+                _imd.Body.OutputInfo.VertexSize   += polygon.VertexSize;
 
                 if (_imd.Body.ModelInfo.CompressNode == "unite_combine")
                 {
-                    rootNode.PolygonSize += polygon.PolygonSize;
+                    rootNode.PolygonSize  += polygon.PolygonSize;
                     rootNode.TriangleSize += polygon.TriangleSize;
-                    rootNode.QuadSize += polygon.QuadSize;
-                    rootNode.VertexSize += polygon.VertexSize;
+                    rootNode.QuadSize     += polygon.QuadSize;
+                    rootNode.VertexSize   += polygon.VertexSize;
 
                     rootNode.Displays.Add(new NodeDisplay
                     {
-                        Index = rootNode.Displays.Count,
-                        Polygon = polygonId,
+                        Index    = rootNode.Displays.Count,
+                        Polygon  = polygonId,
                         Material = materialId,
                         Priority = 0
                     });
@@ -422,16 +556,16 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         private void AddTransformedVertices(Assimp.Node node)
         {
-            var parent = node;
+            var parent    = node;
             var transform = _settings.RotateX180 ? Matrix44.CreateRotationX(180) : Matrix44.Identity;
             while (parent != null)
             {
                 transform = new Matrix44(
-                    parent.Transform.A1, parent.Transform.A2, parent.Transform.A3, parent.Transform.D1,
-                    parent.Transform.B1, parent.Transform.B2, parent.Transform.B3, parent.Transform.D2,
-                    parent.Transform.C1, parent.Transform.C2, parent.Transform.C3, parent.Transform.D3,
-                    parent.Transform.A4, parent.Transform.B4, parent.Transform.C4, parent.Transform.D4
-                ) * transform;
+                                parent.Transform.A1, parent.Transform.A2, parent.Transform.A3, parent.Transform.D1,
+                                parent.Transform.B1, parent.Transform.B2, parent.Transform.B3, parent.Transform.D2,
+                                parent.Transform.C1, parent.Transform.C2, parent.Transform.C3, parent.Transform.D3,
+                                parent.Transform.A4, parent.Transform.B4, parent.Transform.C4, parent.Transform.D4
+                            ) * transform;
 
                 parent = parent.Parent;
             }
@@ -444,13 +578,15 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
                 foreach (var originalVtx in mesh.Vertices)
                 {
-                    var vtx = new Vector3(originalVtx.X, originalVtx.Y, originalVtx.Z) * transform * _imd.Body.ModelInfo.Magnify;
+                    var vtx = new Vector3(originalVtx.X, originalVtx.Y, originalVtx.Z) * transform *
+                              _imd.Body.ModelInfo.Magnify;
 
                     if (_settings.FlipYZ)
                         vtx = (vtx.X, vtx.Z, vtx.Y);
 
                     //FX32 conversion
-                    vtx = ((float)Math.Round(vtx.X * 4096) / 4096f, (float)Math.Round(vtx.Y * 4096) / 4096f, (float)Math.Round(vtx.Z * 4096) / 4096f);
+                    vtx = ((float) Math.Round(vtx.X * 4096) / 4096f, (float) Math.Round(vtx.Y * 4096) / 4096f,
+                        (float) Math.Round(vtx.Z * 4096) / 4096f);
 
                     _meshes[meshId].Add(vtx);
                 }
@@ -460,7 +596,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         //Support for unite combine only
         private void GetNodes(Assimp.Node node)
         {
-            if (_imd.Body.ModelInfo.CompressNode != "unite_combine") throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
+            if (_imd.Body.ModelInfo.CompressNode != "unite_combine")
+                throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
 
             //The first time adds the root node
             if (_imd.Body.NodeArray.Nodes.Count == 0 && _imd.Body.ModelInfo.CompressNode == "unite_combine")
@@ -470,8 +607,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 _imd.Body.NodeArray.Nodes.Add(new Node
                 {
                     Index = 0,
-                    Name = "world_root",
-                    Kind = "mesh"
+                    Name  = "world_root",
+                    Kind  = "mesh"
                 });
             }
 
@@ -495,21 +632,21 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
             _imd = new LibNitro.Intermediate.Imd.Imd
             {
-                Head = { GeneratorInfo = GeneratorInfo },
-                Body = { OriginalGeneratorInfo = GeneratorInfo }
+                Head = {GeneratorInfo         = GeneratorInfo},
+                Body = {OriginalGeneratorInfo = GeneratorInfo}
             };
 
-            _modelDirectory = Path.GetDirectoryName(path);
-            _imd.Head.CreateInfo.Source = Path.GetFileName(path);
-            _imd.Body.ModelInfo.Magnify = _settings.Magnify;
+            _modelDirectory                       = Path.GetDirectoryName(path);
+            _imd.Head.CreateInfo.Source           = Path.GetFileName(path);
+            _imd.Body.ModelInfo.Magnify           = _settings.Magnify;
             _imd.Body.ModelInfo.UsePrimitiveStrip = _settings.UsePrimitiveStrip ? "on" : "off";
 
             GetTextures();
-            GetMaterials();
+            var matMap = GetMaterials();
             GetMatrices();
             GetNodes(_scene.RootNode);
             GetPosScales();
-            GetPolygons();
+            GetPolygons(matMap);
         }
 
         public void Write(string path)
@@ -543,7 +680,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         private static int GetPosScale(float maxCoordinate)
         {
-            var maxCoord = (int)Math.Round(maxCoordinate * 4096);
+            var maxCoord = (int) Math.Round(maxCoordinate * 4096);
 
             var posScale = 0;
 
