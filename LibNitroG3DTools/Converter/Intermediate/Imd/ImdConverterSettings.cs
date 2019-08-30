@@ -9,7 +9,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         public bool RotateX180 = false;
         public bool FlipYZ = false;
         public bool NoLightOnMaterials = true;
-        public bool UsePrimitiveStrip = false;
+        public bool UsePrimitiveStrip = true;
         public bool Verbose = false;
 
         public static ImdConverterSettings GetArguments(string[] args, out string outPath)
@@ -56,6 +56,10 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                     case "-l":
                     case "--light":
                         settings.NoLightOnMaterials = false;
+                        break;
+                    case "-n":
+                    case "--nostrip":
+                        settings.UsePrimitiveStrip = false;
                         break;
                     case "-v":
                     case "--verbose":

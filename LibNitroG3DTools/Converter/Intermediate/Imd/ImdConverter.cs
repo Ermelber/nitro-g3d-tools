@@ -17,8 +17,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
     {
         public static readonly GeneratorInfo GeneratorInfo = new GeneratorInfo
         {
-            Name    = "ASS to IMD (Made by Ermelber)",
-            Version = "0.2.5"
+            Name    = "ASS to IMD (Made by Ermelber and Gericom)",
+            Version = "0.3.0"
         };
 
         private readonly ImdConverterSettings _settings;
@@ -251,8 +251,6 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         private void GetPolygons(Dictionary<int, int> matMap)
         {
-            if (_settings.UsePrimitiveStrip) throw new NotSupportedException("Primitive Strip isn't supported yet");
-
             var posScale = _imd.Body.ModelInfo.PosScale;
             var rootNode = _imd.Body.NodeArray.Nodes[0];
 
@@ -402,8 +400,18 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 var texs = texList.Keys.ToArray();
                 var nrms = nrmList.Keys.ToArray();
 
-                var newPrims = QuadStripper.Process(primList.ToArray());
-                newPrims = TriStripper.Process(newPrims);
+                Stripping.Primitive[] newPrims;
+
+                if (_settings.UsePrimitiveStrip)
+                {
+                    newPrims = QuadStripper.Process(primList.ToArray());
+                    newPrims = TriStripper.Process(newPrims);
+                }
+                else
+                {
+                    //No stripping
+                    newPrims = primList.ToArray();
+                }
 
                 //merge all tris and quads
                 {
@@ -556,20 +564,6 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         private void AddTransformedVertices(Assimp.Node node)
         {
-            var parent    = node;
-            var transform = _settings.RotateX180 ? Matrix44.CreateRotationX(180) : Matrix44.Identity;
-            while (parent != null)
-            {
-                transform = new Matrix44(
-                                parent.Transform.A1, parent.Transform.A2, parent.Transform.A3, parent.Transform.D1,
-                                parent.Transform.B1, parent.Transform.B2, parent.Transform.B3, parent.Transform.D2,
-                                parent.Transform.C1, parent.Transform.C2, parent.Transform.C3, parent.Transform.D3,
-                                parent.Transform.A4, parent.Transform.B4, parent.Transform.C4, parent.Transform.D4
-                            ) * transform;
-
-                parent = parent.Parent;
-            }
-
             foreach (var meshId in node.MeshIndices)
             {
                 var mesh = _scene.Meshes[meshId];
@@ -578,8 +572,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
                 foreach (var originalVtx in mesh.Vertices)
                 {
-                    var vtx = new Vector3(originalVtx.X, originalVtx.Y, originalVtx.Z) * transform *
-                              _imd.Body.ModelInfo.Magnify;
+                    var vtx = new Vector3(originalVtx.X, originalVtx.Y, originalVtx.Z);
 
                     if (_settings.FlipYZ)
                         vtx = (vtx.X, vtx.Z, vtx.Y);
@@ -628,7 +621,12 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             _settings = settings ?? new ImdConverterSettings();
 
             var context = new AssimpContext();
-            _scene = context.ImportFile(path);
+
+            //Magnify model
+            context.Scale = _settings.Magnify;
+
+            //PreTransformVertices should only happen when compress_node = unite_combine (Always done for now)
+            _scene = context.ImportFile(path, PostProcessSteps.PreTransformVertices);
 
             _imd = new LibNitro.Intermediate.Imd.Imd
             {

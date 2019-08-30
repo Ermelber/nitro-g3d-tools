@@ -58,7 +58,7 @@ namespace IntermediateConverter
             Console.WriteLine("\t-f/--flipYZ\t\t\tFlips the Y and Z Axis.");
             Console.WriteLine("\t-r/--rot180\t\t\tRotates the model by 180 degrees on the X Axis.");
             Console.WriteLine("\t-l/--light\t\t\tEnables Light 0 on all materials. Needed for shaded models.");
-            //Console.WriteLine("\t-s/--strip\t\t\tEnables primitive stripping.");
+            Console.WriteLine("\t-n/--nostrip\t\t\tDisables primitive stripping.");
             Console.WriteLine("\t-v/--verbose\t\t\tOutput warnings and other info.");
             Console.WriteLine();
         }
