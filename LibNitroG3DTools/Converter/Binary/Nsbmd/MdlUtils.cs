@@ -1,5 +1,6 @@
 ﻿using LibNitro.G3D.BinRes;
 using LibNitro.Intermediate.Imd;
+using LibNitroG3DTools.Converter.Binary.Nsbmd.Sbc;
 using static LibNitro.G3D.BinRes.MDL0;
 using static LibNitro.G3D.BinRes.MDL0.Model;
 using static LibNitro.G3D.BinRes.MDL0.Model.MaterialSet;
@@ -28,28 +29,24 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
 
         private static byte[] GetSbc(Imd imd)
         {
-            var w = new Sbc();
-            w.NODEDESC(0, 0xFF, false, false, 0, -1);
-            w.NODE(0, true);
-            w.POSSCALE(true);
+            var w = new Sbc.Sbc();
+            
+            w.CommandList.Add(new SbcNodeDesc(1, 0, 0, 0));
+            w.CommandList.Add(new SbcNop());
+            w.CommandList.Add(new SbcNode(0, true));
+            w.CommandList.Add(new SbcPosScale(0));
 
             foreach (var display in imd.Body.NodeArray.Nodes[0].Displays)
             {
-                w.MAT((byte)display.Material);
-                w.SHP((byte)display.Polygon);
+                w.CommandList.Add(new SbcMat(0, (byte)display.Material));
+                w.CommandList.Add(new SbcShape((byte)display.Polygon));
             }
 
-            /*for (int i = 0; i < imd.Body.NodeArray.Nodes[0].Displays.Count; i++)
-            {
-                w.MAT((byte)i);
-                w.SHP((byte)i);
-            }*/
+            w.CommandList.Add(new SbcPosScale(1));
+            w.CommandList.Add(new SbcRet());
+            w.CommandList.Add(new SbcNop());
 
-            w.POSSCALE(false);
-            w.RET();
-            w.NOP();
-
-            return w.GetData();
+            return w.Write();
         }
 
         private static Model.ModelInfo GetModelInfo(Imd imd)

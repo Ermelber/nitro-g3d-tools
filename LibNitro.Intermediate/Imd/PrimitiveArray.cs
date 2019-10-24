@@ -62,16 +62,16 @@ namespace LibNitro.Intermediate.Imd
         {
             var decoded = new List<DecodedCommand>();
 
+            decoded.Add(new DecodedCommand
+            {
+                G3dCommand = G3dCommand.Begin,
+                IntArgs = new[] { (uint)G3dDisplayList.GetPrimitiveType(Type) }
+            });
+
             foreach (var command in Commands)
             {
                 if (command.G3dCommand == G3dCommand.RestoreMatrix) //todo: check if it's right
                 {
-                    decoded.Add(new DecodedCommand
-                    {
-                        G3dCommand = G3dCommand.Begin,
-                        IntArgs    = new[] {(uint) G3dDisplayList.GetPrimitiveType(Type)}
-                    });
-
                     if (command.GetDecodedCommand().IntArgs[0] != 0)
                         decoded.Add(command.GetDecodedCommand());
                 }

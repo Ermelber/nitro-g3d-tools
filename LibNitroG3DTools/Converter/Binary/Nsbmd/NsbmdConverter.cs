@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using LibNitro.G3D.BinRes;
 using LibNitro.Intermediate.Imd;
 
@@ -32,7 +33,6 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
 
             //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\workspace\P_PC.nsbmd"));
 
-
             _testNsbmd = new NSBMD(File.ReadAllBytes(@"testfiles\patapata.nsbmd"));
 
             GetModelSet();
@@ -48,17 +48,25 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 decoded.Add(G3dDisplayList.Decode(s.DL));
             }*/
 
-            var dl = _testNsbmd.ModelSet.models[0].shapes.shape[0].DL;
+            /*var dl = _testNsbmd.ModelSet.models[0].shapes.shape[0].DL;
 
             var decoded = G3dDisplayList.Decode(dl);
+            var decodedNoNops = decoded.Where(x => x.G3dCommand != G3dCommand.Nop).ToList();
             var decodedImd = _imd.Body.PolygonArray.Polygons[0].MatrixPrimitives[0].PrimitiveArray.GetDecodedCommands();
 
             //var encoded = G3dDisplayList.Encode(decodedImd);
 
-            var encoded = G3dDisplayList.Encode(decoded);
-            var encoded2 = G3dDisplayList.Encode(decodedImd);
+            var encodedFromNsbmd = G3dDisplayList.Encode(decoded); //Must be 992 bytes long
+            var encodedNoNops = G3dDisplayList.Encode(decodedNoNops);
 
-            var sbc = new Sbc(_testNsbmd.ModelSet.models[0].sbc);
+            var encodedFromImd = G3dDisplayList.Encode(decodedImd);
+            var decoded3 = G3dDisplayList.Decode(encodedFromImd);
+
+            var sbc = new Sbc.Sbc(_testNsbmd.ModelSet.models[0].sbc);
+
+            var test = sbc.Write();
+
+            _nsbmd.ModelSet.models[0].sbc = test;*/
 
             /*for (int i = 0; i < dl.Length; i++)
             {

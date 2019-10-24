@@ -98,8 +98,8 @@ namespace LibNitro.Intermediate.Imd
     {
         Triangle = 0,
         Quadrilateral = 1,
-        TriangleStrips = 2,
-        QuadrilateralStrips = 3
+        TriangleStrip = 2,
+        QuadrilateralStrip = 3
     }
 
     public class G3dDisplayList
@@ -111,8 +111,8 @@ namespace LibNitro.Intermediate.Imd
                 default:
                 case "triangles": return G3dPrimitiveType.Triangle;
                 case "quads": return G3dPrimitiveType.Quadrilateral;
-                case "triangle_strip": return G3dPrimitiveType.TriangleStrips;
-                case "quad_strip": return G3dPrimitiveType.QuadrilateralStrips;
+                case "triangle_strip": return G3dPrimitiveType.TriangleStrip;
+                case "quad_strip": return G3dPrimitiveType.QuadrilateralStrip;
             }
         }
 
@@ -127,6 +127,7 @@ namespace LibNitro.Intermediate.Imd
             var commandQueue = new Queue<DecodedCommand>();
 
             var nops = decoded.Count % 4 == 0 ? 0 : 4 - decoded.Count % 4;
+            //var nops = decoded.Count % 8 == 0 ? 0 : 8 - decoded.Count % 8;
 
             //Add NOPs at the end
             for (int i = 0; i < nops; i++)

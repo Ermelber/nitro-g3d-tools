@@ -56,7 +56,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Converter\Binary\Nsbmd\Sbc.cs" />
+    <Compile Include="Converter\Binary\Nsbmd\Sbc\Sbc.cs" />
+    <Compile Include="Converter\Binary\Nsbmd\Sbc\SbcCommand.cs" />
     <Compile Include="Converter\Intermediate\Imd\ImdConverterSettings.cs" />
     <Compile Include="Converter\Intermediate\Imd\ImdConverter.cs" />
     <Compile Include="Converter\Binary\Nsbmd\NsbmdConverter.cs" />
