@@ -82,6 +82,15 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                     Console.WriteLine(e);
                 }
             }*/
+            var testNsbmd2 = new NSBMD(File.ReadAllBytes(@"testfiles/test.nsbmd"));
+
+            //Test patching shapes
+            for (int i = 0; i < _testNsbmd.ModelSet.models[0].shapes.shape.Length; i++)
+            {
+                var newUnwrittenShape = _nsbmd.ModelSet.models[0].shapes.shape[i];
+                var newShape = testNsbmd2.ModelSet.models[0].shapes.shape[i];
+                var oldShape = _testNsbmd.ModelSet.models[0].shapes.shape[i];
+            }
 
             File.WriteAllBytes("testfiles/test.nsbmd",_nsbmd.Write());
         }

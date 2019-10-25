@@ -1,4 +1,5 @@
-﻿using LibNitro.G3D.BinRes;
+﻿using Assimp;
+using LibNitro.G3D.BinRes;
 using LibNitro.Intermediate.Imd;
 using LibNitroG3DTools.Converter.Binary.Nsbmd.Sbc;
 using static LibNitro.G3D.BinRes.MDL0;
@@ -7,6 +8,7 @@ using static LibNitro.G3D.BinRes.MDL0.Model.MaterialSet;
 using static LibNitro.G3D.BinRes.MDL0.Model.MaterialSet.Material.NNS_G3D_MATFLAG;
 using static LibNitro.G3D.BinRes.MDL0.Model.NodeSet;
 using static LibNitro.G3D.BinRes.MDL0.Model.ShapeSet;
+using Node = LibNitro.Intermediate.Imd.Node;
 
 namespace LibNitroG3DTools.Converter.Binary.Nsbmd
 {
@@ -222,10 +224,19 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             {
                 shapes.dict.Add(polygon.Name, new ShapeSetData());
 
+                Shape.NNS_G3D_SHPFLAG flag = 0;
+
+                if (polygon.TexFlag == "on")
+                    flag = Shape.NNS_G3D_SHPFLAG.NNS_G3D_SHPFLAG_USE_TEXCOORD;
+                if (polygon.ClrFlag == "on")
+                    flag |= Shape.NNS_G3D_SHPFLAG.NNS_G3D_SHPFLAG_USE_COLOR;
+                if (polygon.NrmFlag == "on")
+                    flag |= Shape.NNS_G3D_SHPFLAG.NNS_G3D_SHPFLAG_USE_NORMAL;
+
                 //TODO
                 shapes.shape[idx++] = new Shape
                 {
-                    flag = Shape.NNS_G3D_SHPFLAG.NNS_G3D_SHPFLAG_USE_TEXCOORD,
+                    flag = flag,
                     DL = G3dDisplayList.Encode(polygon.MatrixPrimitives[0].PrimitiveArray.GetDecodedCommands())
                 };
             }

@@ -17,9 +17,9 @@ namespace LibNitro.Intermediate.Imd
         }
 
         //Todo: Fix matrix thing
-        public List<DecodedCommand> GetDecodedCommands()
+        public List<DisplayListCommand> GetDecodedCommands()
         {
-            var decoded = new List<DecodedCommand>();
+            var decoded = new List<DisplayListCommand>();
 
             foreach (var primitive in Primitives)
                 decoded.AddRange(primitive.GetDecodedCommands());
@@ -58,11 +58,11 @@ namespace LibNitro.Intermediate.Imd
 
         [XmlAttribute("vertex_size")] public int VertexSize;
 
-        public List<DecodedCommand> GetDecodedCommands()
+        public List<DisplayListCommand> GetDecodedCommands()
         {
-            var decoded = new List<DecodedCommand>();
+            var decoded = new List<DisplayListCommand>();
 
-            decoded.Add(new DecodedCommand
+            decoded.Add(new DisplayListCommand
             {
                 G3dCommand = G3dCommand.Begin,
                 IntArgs = new[] { (uint)G3dDisplayList.GetPrimitiveType(Type) }
@@ -79,7 +79,7 @@ namespace LibNitro.Intermediate.Imd
                     decoded.Add(command.GetDecodedCommand());
             }
 
-            decoded.Add(new DecodedCommand
+            decoded.Add(new DisplayListCommand
             {
                 G3dCommand = G3dCommand.End
             });
@@ -96,15 +96,15 @@ namespace LibNitro.Intermediate.Imd
         {
         }
 
-        public abstract DecodedCommand GetDecodedCommand();
+        public abstract DisplayListCommand GetDecodedCommand();
     }
 
     public class TextureCoordCommand : PrimitiveCommand
     {
         public override G3dCommand G3dCommand => G3dCommand.TexCoord;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {TexCoords.X, TexCoords.Y}
@@ -134,8 +134,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.Color;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 IntArgs = new[]
@@ -166,8 +166,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.RestoreMatrix;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 IntArgs    = new[] {(uint) Index}
@@ -180,8 +180,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.Normal;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {Normal.X, Normal.Y, Normal.Z}
@@ -214,8 +214,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.VertexXY;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {Position.X, Position.Y}
@@ -241,8 +241,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.VertexXZ;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {Position.X, Position.Y}
@@ -267,8 +267,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.VertexYZ;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {Position.X, Position.Y}
@@ -293,8 +293,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.VertexDiff;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {Diff.X, Diff.Y, Diff.Z}
@@ -322,8 +322,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.Vertex;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {Position.X, Position.Y, Position.Z}
@@ -351,8 +351,8 @@ namespace LibNitro.Intermediate.Imd
     {
         public override G3dCommand G3dCommand => G3dCommand.VertexShort;
 
-        public override DecodedCommand GetDecodedCommand() =>
-            new DecodedCommand
+        public override DisplayListCommand GetDecodedCommand() =>
+            new DisplayListCommand
             {
                 G3dCommand = G3dCommand,
                 RealArgs   = new[] {Position.X, Position.Y, Position.Z}
