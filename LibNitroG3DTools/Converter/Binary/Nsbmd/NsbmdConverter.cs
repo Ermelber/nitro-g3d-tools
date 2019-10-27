@@ -17,11 +17,43 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         private NSBMD _testNsbmd;
         private NSBTX _testNsbtx;
 
+        private static void DumpDisplayList(IEnumerable<DisplayListCommand> dl, string path)
+        {
+            File.WriteAllLines(path, dl.Select(x => $"{x}"));
+        }
+
         public NsbmdConverter(string path)
         {
+            var test = new NSBMD(File.ReadAllBytes(@"testfiles\patapata.nsbmd"));
+
+            var dlA = test.ModelSet.models[0].shapes.shape[0].DL;
+            var dlB = G3dDisplayList.Encode(G3dDisplayList.Decode(test.ModelSet.models[0].shapes.shape[0].DL).Where(x => x.G3dCommand != G3dCommand.Nop));
+
+            var dlC = G3dDisplayList.Encode(new[]
+            {
+                new DisplayListCommand
+                {
+                    G3dCommand = G3dCommand.TexCoord, RealArgs = new[] {10f, 10f}
+                },
+                new DisplayListCommand
+                {
+                    G3dCommand = G3dCommand.Vertex, RealArgs = new[] {5f, 5f, 5f}
+                },
+                new DisplayListCommand
+                {
+                    G3dCommand = G3dCommand.End
+                },
+            });
+
+            DumpDisplayList(G3dDisplayList.Decode(dlA), "testfiles/dlA.txt");
+            DumpDisplayList(G3dDisplayList.Decode(dlB), "testfiles/dlB.txt");
+            DumpDisplayList(G3dDisplayList.Decode(dlC), "testfiles/dlC.txt");
+
+            return;
+
             _imd = Imd.Read(path);
 
-            if (!ImdChecker(_imd))
+            if (!ValidateImd(_imd))
                 throw new InvalidDataException("IMD file has errors inside.");
 
             _imdName = Path.GetFileNameWithoutExtension(path);
@@ -33,7 +65,6 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
 
             //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\workspace\P_PC.nsbmd"));
 
-            _testNsbmd = new NSBMD(File.ReadAllBytes(@"testfiles\patapata.nsbmd"));
 
             GetModelSet();
             //GetTextureSet();
@@ -90,6 +121,12 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 var newUnwrittenShape = _nsbmd.ModelSet.models[0].shapes.shape[i];
                 var newShape = testNsbmd2.ModelSet.models[0].shapes.shape[i];
                 var oldShape = _testNsbmd.ModelSet.models[0].shapes.shape[i];
+
+                DumpDisplayList(G3dDisplayList.Decode(newUnwrittenShape.DL), $"testfiles/newdl/new_{i}.txt");
+                DumpDisplayList(G3dDisplayList.Decode(oldShape.DL), $"testfiles/olddl/{i}.txt");
+
+                File.AppendAllText("testfiles/newdl/dlinfo.txt", $"NEW SHAPE: Encoded DL Length = {newUnwrittenShape.DL.Length} ; Decoded DL Length = {G3dDisplayList.Decode(newUnwrittenShape.DL).Count}" +
+                                                                 $" OLD SHAPE: Encoded DL Length = {oldShape.DL.Length} ; Decoded DL Length = {G3dDisplayList.Decode(oldShape.DL).Count}\n");
             }
 
             File.WriteAllBytes("testfiles/test.nsbmd",_nsbmd.Write());
@@ -104,7 +141,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 File.WriteAllBytes(texPath, _nsbtx.Write());
         }
 
-        private static bool ImdChecker(Imd imd)
+        private static bool ValidateImd(Imd imd)
         {
             var valid = true;
 

@@ -51,7 +51,7 @@ namespace LibNitro.Intermediate.Imd
         }
     }
 
-    public enum G3dCommand : uint
+    public enum G3dCommand : byte
     {
         Nop = 0x00, 
 
@@ -134,7 +134,7 @@ namespace LibNitro.Intermediate.Imd
 
             var cmdList = commands.ToList();
             
-            var nops = cmdList.Count % 4 == 0 ? 0 : 4 - cmdList.Count % 4;
+            var nops = (cmdList.Count % 4) == 0 ? 0 : 4 - (cmdList.Count % 4);
 
             //Add NOPs at the end
             for (int i = 0; i < nops; i++)
@@ -156,7 +156,7 @@ namespace LibNitro.Intermediate.Imd
                 {
                     var cmd = commandQueue.Dequeue();
 
-                    m.Position = offset;
+                    //m.Position = offset;
 
                     switch (cmd.G3dCommand)
                     {
@@ -226,32 +226,26 @@ namespace LibNitro.Intermediate.Imd
 
             foreach (var command in cmdList)
             {
-                if (packed == 4)
+                if (command.G3dCommand != G3dCommand.Nop)
                 {
-                    Flush();
-                }
-
-                //if (param0Flag == false)
-                //{
                     param0Flag = packed > 0 && (command.G3dCommand == G3dCommand.Identity ||
                                                 command.G3dCommand == G3dCommand.PushMatrix ||
-                                                command.G3dCommand == G3dCommand.End ||
-                                                command.G3dCommand == G3dCommand.Nop);
-                //}
+                                                command.G3dCommand == G3dCommand.End);
+                }
 
-                m.Position = offset;
+                //m.Position = offset;
 
                 commandQueue.Enqueue(command);
                 ew.Write((byte) command.G3dCommand);
                 packed++;
                 offset++;
+
+                if (packed == 4)
+                {
+                    Flush();
+                }
             }
-
-            /*for (int i = 0; i < 4; i++)
-            {
-                ew.Write((byte)G3dCommand.Nop);
-            }*/
-
+            
             var dl = m.ToArray();
 
             m.Close();
@@ -263,85 +257,76 @@ namespace LibNitro.Intermediate.Imd
         {
             var m = new MemoryStream(dl);
             var er = new EndianBinaryReaderEx(m, Endianness.LittleEndian);
-
-            int offset = 0;
+            
             var commandQueue = new Queue<G3dCommand>();
 
             var decoded = new List<DisplayListCommand>();
 
-            while (offset < dl.Length)
+            while (m.Position < dl.Length)
             {
-                if (commandQueue.Count == 0)
+                commandQueue.Enqueue((G3dCommand)er.ReadByte());
+                commandQueue.Enqueue((G3dCommand)er.ReadByte());
+                commandQueue.Enqueue((G3dCommand)er.ReadByte());
+                commandQueue.Enqueue((G3dCommand)er.ReadByte());
+                
+                //Decode the 4 enqueued commands
+                for (var j = 0; j < 4; j++)
                 {
-                    commandQueue.Enqueue((G3dCommand) dl[offset++]);
-                    commandQueue.Enqueue((G3dCommand) dl[offset++]);
-                    commandQueue.Enqueue((G3dCommand) dl[offset++]);
-                    commandQueue.Enqueue((G3dCommand) dl[offset++]);
-                }
+                    var cmd = commandQueue.Dequeue();
 
-                er.BaseStream.Position = offset;
-
-                G3dCommand cmd = commandQueue.Dequeue();
-                switch (cmd)
-                {
-                    default:
-                    case G3dCommand.PushMatrix:
-                    case G3dCommand.End:
-                        decoded.Add(new DisplayListCommand { G3dCommand = cmd } );
-                        break;
-                    case G3dCommand.TexCoord:
-                        decoded.Add(new DisplayListCommand
+                    switch (cmd)
+                    {
+                        default:
+                        case G3dCommand.PushMatrix:
+                        case G3dCommand.End:
+                            decoded.Add(new DisplayListCommand { G3dCommand = cmd });
+                            break;
+                        case G3dCommand.TexCoord:
+                            decoded.Add(new DisplayListCommand
                             {
                                 G3dCommand = cmd,
-                                RealArgs = new []
+                                RealArgs = new[]
                                 {
                                     er.ReadFixedPoint(true, 11, 4),
                                     er.ReadFixedPoint(true, 11, 4)
                                 }
-                            }
-                        );
-                        offset += 4;
-                        break;
-                    case G3dCommand.VertexXY:
-                    case G3dCommand.VertexXZ:
-                    case G3dCommand.VertexYZ:
-                        decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = er.ReadFx16s(2) });
-                        offset += 4;
-                        break;
-                    case G3dCommand.Begin:
-                    case G3dCommand.RestoreMatrix:
-                        decoded.Add(new DisplayListCommand { G3dCommand = cmd, IntArgs = er.ReadUInt32s(1) });
-                        offset += 4;
-                        break;
-                    case G3dCommand.VertexDiff:
-                        var vec2 = VecFx10.ToVector3(er.ReadUInt32()) / 8;
-                        decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = new[] { vec2.X , vec2.Y, vec2.Z } });
-                        offset += 4;
-                        break;
-                    case G3dCommand.VertexShort:
-                        var vec3 = VecFx10.ToVector3(er.ReadUInt32(),3,6);
-                        decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = new[] { vec3.X, vec3.Y, vec3.Z } });
-                        offset += 4;
-                        break;
-                    case G3dCommand.Normal:
-                        var vec = VecFx10.ToVector3(er.ReadUInt32());
-                        decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = new [] {vec.X, vec.Y, vec.Z} } );
-                        offset += 4;
-                        break;
-                    case G3dCommand.Color:
-                        var color = Color.FromArgb((int) GFXUtil.ConvertColorFormat(er.ReadUInt32(),
-                            ColorFormat.ABGR1555, ColorFormat.ARGB8888));
-                        decoded.Add(new DisplayListCommand { G3dCommand = cmd, IntArgs = new uint[] { color.R, color.G, color.B}});
-                        offset += 4;
-                        break;
-                    case G3dCommand.Vertex:
-                        decoded.Add(new DisplayListCommand
-                        {
-                            G3dCommand = cmd,
-                            RealArgs = er.ReadFx16s(3)
-                        });
-                        offset += 8;
-                        break;
+                            });
+                            break;
+                        case G3dCommand.VertexXY:
+                        case G3dCommand.VertexXZ:
+                        case G3dCommand.VertexYZ:
+                            decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = er.ReadFx16s(2) });
+                            break;
+                        case G3dCommand.Begin:
+                        case G3dCommand.RestoreMatrix:
+                            decoded.Add(new DisplayListCommand { G3dCommand = cmd, IntArgs = er.ReadUInt32s(1) });
+                            break;
+                        case G3dCommand.VertexDiff:
+                            var vec2 = VecFx10.ToVector3(er.ReadUInt32()) / 8;
+                            decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = new[] { vec2.X, vec2.Y, vec2.Z } });
+                            break;
+                        case G3dCommand.VertexShort:
+                            var vec3 = VecFx10.ToVector3(er.ReadUInt32(), 3, 6);
+                            decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = new[] { vec3.X, vec3.Y, vec3.Z } });
+                            break;
+                        case G3dCommand.Normal:
+                            var vec = VecFx10.ToVector3(er.ReadUInt32());
+                            decoded.Add(new DisplayListCommand { G3dCommand = cmd, RealArgs = new[] { vec.X, vec.Y, vec.Z } });
+                            break;
+                        case G3dCommand.Color:
+                            var color = Color.FromArgb((int)GFXUtil.ConvertColorFormat(er.ReadUInt32(),
+                                ColorFormat.ABGR1555, ColorFormat.ARGB8888));
+                            decoded.Add(new DisplayListCommand { G3dCommand = cmd, IntArgs = new uint[] { color.R, color.G, color.B } });
+                            break;
+                        case G3dCommand.Vertex:
+                            decoded.Add(new DisplayListCommand
+                            {
+                                G3dCommand = cmd,
+                                RealArgs = er.ReadFx16s(3)
+                            });
+                            er.ReadUInt16();
+                            break;
+                    }
                 }
             }
 
