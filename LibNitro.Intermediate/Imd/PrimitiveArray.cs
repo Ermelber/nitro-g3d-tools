@@ -17,7 +17,7 @@ namespace LibNitro.Intermediate.Imd
         }
 
         //Todo: Fix matrix thing
-        public List<DisplayListCommand> GetDecodedCommands()
+        public List<DisplayListCommand> GetDisplayList()
         {
             var decoded = new List<DisplayListCommand>();
 

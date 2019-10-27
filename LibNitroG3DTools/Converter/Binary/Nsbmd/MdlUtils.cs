@@ -188,7 +188,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 curMat.SetDiffuse(mat.GetDiffuse());
                 curMat.SetEmission(mat.GetEmission());
                 curMat.SetSpecular(mat.GetSpecular());
-
+                
                 curMat.SetAlpha(mat.Alpha);
 
                 curMat.flag = TEXMTX_TRANSZERO | TEXMTX_ROTZERO | TEXMTX_SCALEONE | DIFFUSE | VTXCOLOR | SHININESS |
@@ -237,7 +237,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 shapes.shape[idx++] = new Shape
                 {
                     flag = flag,
-                    DL = G3dDisplayList.Encode(polygon.MatrixPrimitives[0].PrimitiveArray.GetDecodedCommands())
+                    DL = G3dDisplayList.Encode(polygon.MatrixPrimitives[0].PrimitiveArray.GetDisplayList())
                 };
             }
 

@@ -27,7 +27,7 @@ namespace BinaryConverter
 
                 var a = new NsbmdConverter(args[0]);
 
-                //a.Write(outPath);
+                a.Write(outPath);
 
                 /*if (settings.Verbose)*/
                 Console.WriteLine("Success!");

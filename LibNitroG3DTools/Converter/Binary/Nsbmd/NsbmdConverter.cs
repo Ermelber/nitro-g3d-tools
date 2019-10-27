@@ -22,12 +22,12 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             File.WriteAllLines(path, dl.Select(x => $"{x}"));
         }
 
-        public NsbmdConverter(string path)
+        private void Test()
         {
             var test = new NSBMD(File.ReadAllBytes(@"testfiles\patapata.nsbmd"));
 
-            var dlA = test.ModelSet.models[0].shapes.shape[0].DL;
-            var dlB = G3dDisplayList.Encode(G3dDisplayList.Decode(test.ModelSet.models[0].shapes.shape[0].DL).Where(x => x.G3dCommand != G3dCommand.Nop));
+            var dlA = test.ModelSet.models[0].shapes.shape[2].DL;
+            var dlB = G3dDisplayList.Encode(G3dDisplayList.Decode(test.ModelSet.models[0].shapes.shape[2].DL).Where(x => x.G3dCommand != G3dCommand.Nop));
 
             var dlC = G3dDisplayList.Encode(new[]
             {
@@ -48,28 +48,6 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
             DumpDisplayList(G3dDisplayList.Decode(dlA), "testfiles/dlA.txt");
             DumpDisplayList(G3dDisplayList.Decode(dlB), "testfiles/dlB.txt");
             DumpDisplayList(G3dDisplayList.Decode(dlC), "testfiles/dlC.txt");
-
-            return;
-
-            _imd = Imd.Read(path);
-
-            if (!ValidateImd(_imd))
-                throw new InvalidDataException("IMD file has errors inside.");
-
-            _imdName = Path.GetFileNameWithoutExtension(path);
-
-            _nsbmd = new NSBMD(false);
-
-            //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\Models\Tracks\Retro\MK8 Animal Crossing\imd\mori_spring.nsbmd"));
-            //_testNsbtx = new NSBTX(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\Models\Tracks\Retro\MK8 Animal Crossing\imd\mori_spring.nsbtx"));
-
-            //_testNsbmd = new NSBMD(File.ReadAllBytes(@"E:\ermel\Hackdom\DSHack\EKDS\GRAPHICS\GRAPHICS\workspace\P_PC.nsbmd"));
-
-
-            GetModelSet();
-            //GetTextureSet();
-
-            //File.WriteAllBytes(@"E:\ermel\Desktop\test.nsbmd", _nsbmd.Write());
 
             //DL DECODE TEST
             /*var decoded = new List<List<DecodedCommand>>();
@@ -113,10 +91,13 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                     Console.WriteLine(e);
                 }
             }*/
-            var testNsbmd2 = new NSBMD(File.ReadAllBytes(@"testfiles/test.nsbmd"));
+            //File.WriteAllBytes(@"E:\ermel\Desktop\test.nsbmd", _nsbmd.Write());
+
+
+            //var testNsbmd2 = new NSBMD(File.ReadAllBytes(@"testfiles/test.nsbmd"));
 
             //Test patching shapes
-            for (int i = 0; i < _testNsbmd.ModelSet.models[0].shapes.shape.Length; i++)
+            /*for (int i = 0; i < _testNsbmd.ModelSet.models[0].shapes.shape.Length; i++)
             {
                 var newUnwrittenShape = _nsbmd.ModelSet.models[0].shapes.shape[i];
                 var newShape = testNsbmd2.ModelSet.models[0].shapes.shape[i];
@@ -127,13 +108,30 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
 
                 File.AppendAllText("testfiles/newdl/dlinfo.txt", $"NEW SHAPE: Encoded DL Length = {newUnwrittenShape.DL.Length} ; Decoded DL Length = {G3dDisplayList.Decode(newUnwrittenShape.DL).Count}" +
                                                                  $" OLD SHAPE: Encoded DL Length = {oldShape.DL.Length} ; Decoded DL Length = {G3dDisplayList.Decode(oldShape.DL).Count}\n");
-            }
+            }*/
+        }
 
-            File.WriteAllBytes("testfiles/test.nsbmd",_nsbmd.Write());
+        public NsbmdConverter(string path)
+        {
+            _imd = Imd.Read(path);
+
+            if (!ValidateImd(_imd))
+                throw new InvalidDataException("IMD file has errors inside.");
+
+            _imdName = Path.GetFileNameWithoutExtension(path);
+
+            _nsbmd = new NSBMD(false);
+            
+            GetModelSet();
+            GetTextureSet();
+            
+            //File.WriteAllBytes("testfiles/test.nsbmd",_nsbmd.Write());
         }
 
         public void Write(string path)
         {
+            File.WriteAllBytes(path, _nsbmd.Write());
+
             var texPath = Path.Combine(Path.GetDirectoryName(path.Replace("\"", String.Empty)),
                 Path.GetFileNameWithoutExtension(path) + ".nsbtx");
 
