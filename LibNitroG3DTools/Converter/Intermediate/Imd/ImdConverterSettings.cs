@@ -11,6 +11,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         public bool NoLightOnMaterials = true;
         public bool UsePrimitiveStrip = true;
         public bool Verbose = false;
+        public string CompressNodeMode = "unite_combine";
 
         public static ImdConverterSettings GetArguments(string[] args, out string outPath)
         {

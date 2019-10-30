@@ -25,8 +25,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         private readonly Scene                _scene;
         private          ModelBounds          _bounds;
 
-        ///Key: Mesh Id, Value: List of vertices
-        private Dictionary<int, List<Vector3>> _meshes = new Dictionary<int, List<Vector3>>();
+        ///Key: Mesh Id, Value: List of vertices in VecFx32
+        private Dictionary<int, List<VecFx32>> _meshes = new Dictionary<int, List<VecFx32>>();
 
         private readonly string _modelDirectory;
 
@@ -38,21 +38,21 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             _imd.Body.ModelInfo.PosScale = _bounds.GetPosScale();
             _imd.Body.BoxTest.PosScale   = _bounds.GetBoxPosScale();
 
-            Vector3 xyz =
-                (((int) Math.Round(_bounds.BoxXyz.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                    ((int) Math.Round(_bounds.BoxXyz.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                    ((int) Math.Round(_bounds.BoxXyz.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
+            //Vector3 xyz =
+            //    (((int) Math.Round(_bounds.BoxXyz.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+            //        ((int) Math.Round(_bounds.BoxXyz.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+            //        ((int) Math.Round(_bounds.BoxXyz.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
 
-            Vector3 whd =
-                (((int) Math.Round(_bounds.BoxWhd.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                    ((int) Math.Round(_bounds.BoxWhd.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-                    ((int) Math.Round(_bounds.BoxWhd.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
+            //Vector3 whd =
+            //    (((int) Math.Round(_bounds.BoxWhd.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+            //        ((int) Math.Round(_bounds.BoxWhd.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
+            //        ((int) Math.Round(_bounds.BoxWhd.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
 
             //_imd.Body.BoxTest.Xyz = $"{xyz.X} {xyz.Y} {xyz.Z}";
             //_imd.Body.BoxTest.Whd = $"{whd.X} {whd.Y} {whd.Z}";
 
-            _imd.Body.BoxTest.Position = xyz;
-            _imd.Body.BoxTest.Size     = whd;
+            _imd.Body.BoxTest.Position = (_bounds.BoxXyz >> _imd.Body.BoxTest.PosScale).ToVector3();
+            _imd.Body.BoxTest.Size = (_bounds.BoxWhd >> _imd.Body.BoxTest.PosScale).ToVector3();
         }
 
         private void GetTextures()
@@ -290,7 +290,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 var finalPrimList = new List<Primitive>();
 
                 var primList = new List<Stripping.Primitive>();
-                var posList  = new Dictionary<(int x, int y, int z), int>();
+                var posList  = new Dictionary<VecFx32, int>();
                 var clrList  = new Dictionary<(int r, int g, int b), int>();
                 var texList  = new Dictionary<(int s, int t), int>();
                 var nrmList  = new Dictionary<(int x, int y, int z), int>();
@@ -333,8 +333,6 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                         }
                         else
                             prim.Colors.Add(-1);
-
-
 
                         //Texture Coordinates
                         if (texture != null)
@@ -379,15 +377,13 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                             prim.Normals.Add(-1);
 
                         //Vertex
-                        int x      = (int) Math.Round(vertex.X * 4096) >> posScale;
-                        int y      = (int) Math.Round(vertex.Y * 4096) >> posScale;
-                        int z      = (int) Math.Round(vertex.Z * 4096) >> posScale;
-                        var comb   = (x, y, z);
+                        var posScaled = vertex >> posScale;
+
                         int posIdx = posList.Count;
-                        if (posList.ContainsKey(comb))
-                            posIdx = posList[comb];
+                        if (posList.ContainsKey(posScaled))
+                            posIdx = posList[posScaled];
                         else
-                            posList.Add(comb, posIdx);
+                            posList.Add(posScaled, posIdx);
                         prim.Positions.Add(posIdx);
                     }
 
@@ -466,9 +462,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                             throw new Exception("Unexpected primitive type!");
                     }
 
-                    int prevX      = 0;
-                    int prevY      = 0;
-                    int prevZ      = 0;
+                    var prevVtx = new VecFx32();
                     int prevClrIdx = -1;
 
                     for (int i = 0; i < prim.VertexCount; i++)
@@ -487,35 +481,26 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                             prevClrIdx = prim.Colors[i];
                         }
 
-                        int x         = poss[prim.Positions[i]].x;
-                        int y         = poss[prim.Positions[i]].y;
-                        int z         = poss[prim.Positions[i]].z;
-                        var scaledVtx = (x / 4096f, y / 4096f, z / 4096f);
+                        var vtx = poss[prim.Positions[i]];
+                        var diff = vtx - prevVtx;
 
-                        var diffX = x - prevX;
-                        var diffY = y - prevY;
-                        var diffZ = z - prevZ;
-                        var diff  = (diffX / 4096f, diffY / 4096f, diffZ / 4096f);
-
-                        if (i != 0 && diffX == 0)
-                            primitive.Commands.Add(new PosYzCommand(scaledVtx));
-                        else if (i != 0 && diffY == 0)
-                            primitive.Commands.Add(new PosXzCommand(scaledVtx));
-                        else if (i != 0 && diffZ == 0)
-                            primitive.Commands.Add(new PosXyCommand(scaledVtx));
+                        if (i != 0 && diff.X == 0)
+                            primitive.Commands.Add(new PosYzCommand(vtx.ToVector3()));
+                        else if (i != 0 && diff.Y == 0)
+                            primitive.Commands.Add(new PosXzCommand(vtx.ToVector3()));
+                        else if (i != 0 && diff.Z == 0)
+                            primitive.Commands.Add(new PosXyCommand(vtx.ToVector3()));
                         else if (i != 0 &&
-                                 diffX < 512 && diffX >= -512 &&
-                                 diffY < 512 && diffY >= -512 &&
-                                 diffZ < 512 && diffZ >= -512)
-                            primitive.Commands.Add(new PosDiffCommand(diff));
-                        else if ((x & 0x3F) == 0 && (y & 0x3F) == 0 && (z & 0x3F) == 0)
-                            primitive.Commands.Add(new PosShortCommand(scaledVtx));
+                                 diff.X < 512 && diff.X >= -512 &&
+                                 diff.Y < 512 && diff.Y >= -512 &&
+                                 diff.Z < 512 && diff.Z >= -512)
+                            primitive.Commands.Add(new PosDiffCommand(diff.ToVector3()));
+                        else if ((vtx.X & 0x3F) == 0 && (vtx.Y & 0x3F) == 0 && (vtx.Z & 0x3F) == 0)
+                            primitive.Commands.Add(new PosShortCommand(vtx.ToVector3()));
                         else
-                            primitive.Commands.Add(new PosXyzCommand(scaledVtx));
+                            primitive.Commands.Add(new PosXyzCommand(vtx.ToVector3()));
 
-                        prevX = x;
-                        prevY = y;
-                        prevZ = z;
+                        prevVtx = vtx;
 
                         polygon.VertexSize++;
                         primitive.VertexSize++;
@@ -538,7 +523,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 _imd.Body.OutputInfo.QuadSize     += polygon.QuadSize;
                 _imd.Body.OutputInfo.VertexSize   += polygon.VertexSize;
 
-                if (_imd.Body.ModelInfo.CompressNode == "unite_combine")
+                if (_settings.CompressNodeMode == "unite_combine")
                 {
                     rootNode.PolygonSize  += polygon.PolygonSize;
                     rootNode.TriangleSize += polygon.TriangleSize;
@@ -555,64 +540,76 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 }
                 else
                 {
-                    throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
+                    //throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
                 }
 
                 polygonId++;
             }
         }
 
-        private void AddTransformedVertices(Assimp.Node node)
+        /// <summary>
+        /// Collects a single mesh vertices
+        /// </summary>
+        /// <param name="meshId"></param>
+        private void CollectMesh(int meshId)
         {
-            foreach (var meshId in node.MeshIndices)
+            var mesh = _scene.Meshes[meshId];
+
+            _meshes.Add(meshId, new List<VecFx32>());
+
+            foreach (var originalVtx in mesh.Vertices)
             {
-                var mesh = _scene.Meshes[meshId];
+                var vtx = _settings.FlipYZ ? 
+                    new VecFx32(originalVtx.X, originalVtx.Z, originalVtx.Y) : 
+                    new VecFx32(originalVtx.X, originalVtx.Y, originalVtx.Z);
 
-                _meshes.Add(meshId, new List<Vector3>());
-
-                foreach (var originalVtx in mesh.Vertices)
-                {
-                    var vtx = new Vector3(originalVtx.X, originalVtx.Y, originalVtx.Z);
-
-                    if (_settings.FlipYZ)
-                        vtx = (vtx.X, vtx.Z, vtx.Y);
-
-                    //FX32 conversion
-                    vtx = ((float) Math.Round(vtx.X * 4096) / 4096f, (float) Math.Round(vtx.Y * 4096) / 4096f,
-                        (float) Math.Round(vtx.Z * 4096) / 4096f);
-
-                    _meshes[meshId].Add(vtx);
-                }
+                _meshes[meshId].Add(vtx);
             }
         }
 
-        //Support for unite combine only
-        private void GetNodes(Assimp.Node node)
+        private void CollectNodeMeshes(Assimp.Node node)
         {
-            if (_imd.Body.ModelInfo.CompressNode != "unite_combine")
-                throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
+            foreach (var meshId in node.MeshIndices)
+            {
+                CollectMesh(meshId);
+            }
+        }
 
+        private void GetUniteCombineNodes(Assimp.Node node)
+        {
             //The first time adds the root node
-            if (_imd.Body.NodeArray.Nodes.Count == 0 && _imd.Body.ModelInfo.CompressNode == "unite_combine")
+            if (_imd.Body.NodeArray.Nodes.Count == 0)
             {
                 _imd.Body.ModelInfo.NodeSize = "1 1";
 
                 _imd.Body.NodeArray.Nodes.Add(new Node
                 {
                     Index = 0,
-                    Name  = "world_root",
-                    Kind  = "mesh"
+                    Name = "world_root",
+                    Kind = "mesh"
                 });
             }
 
             if (node.HasMeshes)
             {
-                AddTransformedVertices(node);
+                CollectNodeMeshes(node);
             }
 
             foreach (var children in node.Children)
             {
-                GetNodes(children);
+                GetUniteCombineNodes(children);
+            }
+        }
+
+        private void GetNodes(Assimp.Node node)
+        {
+            switch (_settings.CompressNodeMode)
+            {
+                case "unite_combine":
+                    GetUniteCombineNodes(node);
+                    break;
+                default:
+                    throw new NotSupportedException($"Compress Node Mode \"{_settings.CompressNodeMode}\" is not supported.");
             }
         }
 
@@ -625,8 +622,10 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             //Magnify model
             context.Scale = _settings.Magnify;
 
-            //PreTransformVertices should only happen when compress_node = unite_combine (Always done for now)
-            _scene = context.ImportFile(path, PostProcessSteps.PreTransformVertices);
+            if (_settings.CompressNodeMode == "unite_combine")
+                _scene = context.ImportFile(path, PostProcessSteps.PreTransformVertices);
+            else
+                _scene = context.ImportFile(path);
 
             _imd = new LibNitro.Intermediate.Imd.Imd
             {
@@ -638,6 +637,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             _imd.Head.CreateInfo.Source           = Path.GetFileName(path);
             _imd.Body.ModelInfo.Magnify           = _settings.Magnify;
             _imd.Body.ModelInfo.UsePrimitiveStrip = _settings.UsePrimitiveStrip ? "on" : "off";
+            _imd.Body.ModelInfo.CompressNode = _settings.CompressNodeMode;
 
             GetTextures();
             var matMap = GetMaterials();
@@ -655,10 +655,10 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
     public struct ModelBounds
     {
-        public Vector3 Min;
-        public Vector3 Max;
-        public Vector3 BoxXyz => Min;
-        public Vector3 BoxWhd => Max - Min;
+        public VecFx32 Min;
+        public VecFx32 Max;
+        public VecFx32 BoxXyz => Min;
+        public VecFx32 BoxWhd => Max - Min;
 
         public int GetPosScale()
         {
@@ -676,10 +676,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             return GetPosScale(Math.Max(maxWhd, minXyz));
         }
 
-        private static int GetPosScale(float maxCoordinate)
+        private static int GetPosScale(int maxCoord)
         {
-            var maxCoord = (int) Math.Round(maxCoordinate * 4096);
-
             var posScale = 0;
 
             while (maxCoord >= 0x8000)
@@ -691,10 +689,10 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             return posScale;
         }
 
-        public static ModelBounds Calculate(Dictionary<int, List<Vector3>> vertices)
+        public static ModelBounds Calculate(Dictionary<int, List<VecFx32>> vertices)
         {
-            Vector3 min = new Vector3(float.MaxValue);
-            Vector3 max = new Vector3(float.MinValue);
+            var min = new VecFx32(int.MaxValue);
+            var max = new VecFx32(int.MinValue);
 
             foreach (var mesh in vertices.Values)
             {

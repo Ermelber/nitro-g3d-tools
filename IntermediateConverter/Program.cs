@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using LibNitro.Intermediate;
 using LibNitroG3DTools.Converter.Intermediate.Imd;
 
 namespace IntermediateConverter
@@ -11,6 +13,9 @@ namespace IntermediateConverter
         {
             //This is needed to conform to a single standard for decimal numbers
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+
+            //Test();
+            //return;
 
             try
             {
@@ -63,21 +68,31 @@ namespace IntermediateConverter
             Console.WriteLine();
         }
 
-        private static void TestBattery()
+        private static void Test()
         {
+            var test = new Dictionary<VecFx32, int>();
+
+            test.Add(new VecFx32(0,0,0), 134);
+            Console.WriteLine(test[new VecFx32(0, 0, 0)]);
+
+
+            var vec = new VecFx32(34.5654f, 3423.54f, 9087.3f);
+
+            Console.ReadLine();
+
             /*new ImdConverter(@"E:\ermel\Desktop\conversion_tests\DK_FBX_2\DK_FBX\new_tex_18\dk_new_test.fbx",
                 new ConversionSettings
                 {
                     Magnify = 0.0625f
                 }
             ).Write(@"E:\ermel\Desktop\conversion_tests\_imd\dk.imd");*/
-            
-            new ImdConverter(@"E:\ermel\Desktop\conversion_tests\test.fbx",
-                new ImdConverterSettings
-                {
-                    RotateX180 = true
-                }
-            ).Write(@"E:\ermel\Desktop\conversion_tests\_imd\test.imd");
+
+            //new ImdConverter(@"E:\ermel\Desktop\conversion_tests\test.fbx",
+            //    new ImdConverterSettings
+            //    {
+            //        RotateX180 = true
+            //    }
+            //).Write(@"E:\ermel\Desktop\conversion_tests\_imd\test.imd");
 
             /*
             new ImdConverter(@"E:\ermel\Desktop\conversion_tests\ac.fbx",

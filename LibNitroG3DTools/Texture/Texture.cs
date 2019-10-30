@@ -103,7 +103,7 @@ namespace LibNitroG3DTools.Texture
                     _plttIdxData = tga.NitroData.PlttIdxData;
                     _texelData = tga.NitroData.TexelData;
                 }
-                catch
+                catch (Exception e)
                 {
                     throw new NotSupportedException("Non-Nitro TGAs are not supported: " + path);
                 }
