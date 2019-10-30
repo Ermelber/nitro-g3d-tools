@@ -62,6 +62,11 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                     case "--nostrip":
                         settings.UsePrimitiveStrip = false;
                         break;
+                    case "-c":
+                    case "--compressnode":
+                        settings.CompressNodeMode = args[i + 1];
+                        i++;
+                        break;
                     case "-v":
                     case "--verbose":
                         settings.Verbose = true;

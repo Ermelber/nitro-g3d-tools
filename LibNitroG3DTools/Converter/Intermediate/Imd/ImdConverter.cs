@@ -38,19 +38,6 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             _imd.Body.ModelInfo.PosScale = _bounds.GetPosScale();
             _imd.Body.BoxTest.PosScale   = _bounds.GetBoxPosScale();
 
-            //Vector3 xyz =
-            //    (((int) Math.Round(_bounds.BoxXyz.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-            //        ((int) Math.Round(_bounds.BoxXyz.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-            //        ((int) Math.Round(_bounds.BoxXyz.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
-
-            //Vector3 whd =
-            //    (((int) Math.Round(_bounds.BoxWhd.X * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-            //        ((int) Math.Round(_bounds.BoxWhd.Y * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f,
-            //        ((int) Math.Round(_bounds.BoxWhd.Z * 4096) >> _imd.Body.BoxTest.PosScale) / 4096f);
-
-            //_imd.Body.BoxTest.Xyz = $"{xyz.X} {xyz.Y} {xyz.Z}";
-            //_imd.Body.BoxTest.Whd = $"{whd.X} {whd.Y} {whd.Z}";
-
             _imd.Body.BoxTest.Position = (_bounds.BoxXyz >> _imd.Body.BoxTest.PosScale).ToVector3();
             _imd.Body.BoxTest.Size = (_bounds.BoxWhd >> _imd.Body.BoxTest.PosScale).ToVector3();
         }
