@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Assimp;
 using LibFoundation.Math;
 using LibNitro.Intermediate;
@@ -27,6 +28,9 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         ///Key: Mesh Id, Value: List of vertices in VecFx32
         private Dictionary<int, List<VecFx32>> _meshes = new Dictionary<int, List<VecFx32>>();
+
+        //Key: Mesh Id, Value: List of Node Indices
+        private Dictionary<int, sbyte> _meshesNode = new Dictionary<int, sbyte>();
 
         private readonly string _modelDirectory;
 
@@ -239,7 +243,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         private void GetPolygons(Dictionary<int, int> matMap)
         {
             var posScale = _imd.Body.ModelInfo.PosScale;
-            var rootNode = _imd.Body.NodeArray.Nodes[0];
+            //var rootNode = _imd.Body.NodeArray.Nodes[0];
 
             var polygonId = 0;
             foreach (var mesh in _meshes)
@@ -510,25 +514,40 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 _imd.Body.OutputInfo.QuadSize     += polygon.QuadSize;
                 _imd.Body.OutputInfo.VertexSize   += polygon.VertexSize;
 
-                if (_settings.CompressNodeMode == "unite_combine")
-                {
-                    rootNode.PolygonSize  += polygon.PolygonSize;
-                    rootNode.TriangleSize += polygon.TriangleSize;
-                    rootNode.QuadSize     += polygon.QuadSize;
-                    rootNode.VertexSize   += polygon.VertexSize;
+                var node = _imd.Body.NodeArray.Nodes[_meshesNode[meshId]];
 
-                    rootNode.Displays.Add(new NodeDisplay
-                    {
-                        Index    = rootNode.Displays.Count,
-                        Polygon  = polygonId,
-                        Material = materialId,
-                        Priority = 0
-                    });
-                }
-                else
+                node.PolygonSize += polygon.PolygonSize;
+                node.TriangleSize += polygon.TriangleSize;
+                node.QuadSize += polygon.QuadSize;
+                node.VertexSize += polygon.VertexSize;
+
+                node.Displays.Add(new NodeDisplay
                 {
-                    //throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
-                }
+                    Index = node.Displays.Count,
+                    Polygon = polygonId,
+                    Material = materialId,
+                    Priority = 0
+                });
+
+                //if (_settings.CompressNodeMode == "unite_combine")
+                //{
+                //    rootNode.PolygonSize  += polygon.PolygonSize;
+                //    rootNode.TriangleSize += polygon.TriangleSize;
+                //    rootNode.QuadSize     += polygon.QuadSize;
+                //    rootNode.VertexSize   += polygon.VertexSize;
+
+                //    rootNode.Displays.Add(new NodeDisplay
+                //    {
+                //        Index    = rootNode.Displays.Count,
+                //        Polygon  = polygonId,
+                //        Material = materialId,
+                //        Priority = 0
+                //    });
+                //}
+                //else
+                //{
+                //    //throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
+                //}
 
                 polygonId++;
             }
@@ -554,14 +573,54 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             }
         }
 
-        private void CollectNodeMeshes(Assimp.Node node)
+        private void CollectNodeMeshes(Assimp.Node node, sbyte nodeIndex = 0)
         {
             foreach (var meshId in node.MeshIndices)
             {
+                _meshesNode.Add(meshId, nodeIndex);
                 CollectMesh(meshId);
             }
         }
 
+        private static sbyte _nodeCount = 0;
+
+        //compress_mode = none
+        private void GetUncompressNodes(Assimp.Node node, sbyte parent = -1, sbyte broPrev = -1, sbyte broNext = -1)
+        {
+            var index = _nodeCount++;
+
+            var nodeItem = new Node
+            {
+                Index = index,
+                Name = node.Name,
+                Kind = node.HasMeshes ? "mesh" : "null",
+                Parent = parent,
+                BrotherPrev = broPrev,
+                BrotherNext = broNext,
+                Child = node.HasChildren ? (sbyte)(index + 1) : (sbyte)-1
+            };
+
+            _imd.Body.NodeArray.Nodes.Add(nodeItem);
+
+            if (node.HasMeshes)
+            {
+                CollectNodeMeshes(node, index);
+            }
+
+            sbyte childCount = 0;
+
+            foreach (var child in node.Children)
+            {
+                GetUncompressNodes(
+                    child, 
+                    index, 
+                    childCount > 0 ? (sbyte)(childCount - 1) : (sbyte)-1,
+                    childCount < node.ChildCount - 1 ? (sbyte)(childCount + 1) : (sbyte)-1);
+                childCount++;
+            }
+        }
+
+        //compress_mode = unite_combine
         private void GetUniteCombineNodes(Assimp.Node node)
         {
             //The first time adds the root node
@@ -573,7 +632,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 {
                     Index = 0,
                     Name = "world_root",
-                    Kind = "mesh"
+                    Kind = "mesh",
+                    Parent = -1
                 });
             }
 
@@ -592,6 +652,9 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         {
             switch (_settings.CompressNodeMode)
             {
+                case "none":
+                    GetUncompressNodes(node);
+                    break;
                 case "unite_combine":
                     GetUniteCombineNodes(node);
                     break;
