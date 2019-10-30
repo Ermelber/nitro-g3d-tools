@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using LibFoundation.Math;
 using LibNitro.GFX;
@@ -479,18 +480,25 @@ namespace LibNitro.Intermediate.Imd
         }
 
         [XmlAttribute("vertex_size")] public int VertexSize;
+        [XmlIgnore] public bool VertexSizeSpecified => Kind == "mesh";
 
-        [XmlAttribute("polygon_size")] public int PolygonSize;
+        [XmlAttribute("polygon_size"), OptionalField] public int PolygonSize;
+        [XmlIgnore] public bool PolygonSizeSpecified => Kind == "mesh";
 
-        [XmlAttribute("triangle_size")] public int TriangleSize;
+        [XmlAttribute("triangle_size"), OptionalField] public int TriangleSize;
+        [XmlIgnore] public bool TriangleSizeSpecified => Kind == "mesh";
 
-        [XmlAttribute("quad_size")] public int QuadSize;
+        [XmlAttribute("quad_size"), OptionalField] public int QuadSize;
+        [XmlIgnore] public bool QuadSizeSpecified => Kind == "mesh";
 
-        [XmlAttribute("volume_min")] public string VolumeMin;
+        [XmlAttribute("volume_min"), OptionalField] public string VolumeMin;
+        [XmlIgnore] public bool VolumeMinSpecified => Kind == "mesh";
 
-        [XmlAttribute("volume_max")] public string VolumeMax;
+        [XmlAttribute("volume_max"), OptionalField] public string VolumeMax;
+        [XmlIgnore] public bool VolumeMaxSpecified => Kind == "mesh";
 
-        [XmlAttribute("volume_r")] public decimal VolumeR;
+        [XmlAttribute("volume_r"), OptionalField] public decimal VolumeR;
+        [XmlIgnore] public bool VolumeRSpecified => Kind == "mesh";
     }
 
     public class NodeDisplay

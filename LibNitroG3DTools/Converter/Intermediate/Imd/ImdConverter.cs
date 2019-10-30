@@ -29,7 +29,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         ///Key: Mesh Id, Value: List of vertices in VecFx32
         private Dictionary<int, List<VecFx32>> _meshes = new Dictionary<int, List<VecFx32>>();
 
-        //Key: Mesh Id, Value: List of Node Indices
+        //Key: Mesh Id, Value: Node Index
         private Dictionary<int, sbyte> _meshesNode = new Dictionary<int, sbyte>();
 
         private readonly string _modelDirectory;
@@ -589,6 +589,12 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         {
             var index = _nodeCount++;
 
+            var mtx = node.Transform;
+
+            var translate = $"{mtx.A4} {mtx.B4} {mtx.C4}";
+            var scale = $"{mtx.A1} {mtx.B3} {mtx.C2}";
+            var rotation = "0.00 0.00 0.00";
+
             var nodeItem = new Node
             {
                 Index = index,
@@ -597,7 +603,10 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 Parent = parent,
                 BrotherPrev = broPrev,
                 BrotherNext = broNext,
-                Child = node.HasChildren ? (sbyte)(index + 1) : (sbyte)-1
+                Child = node.HasChildren ? (sbyte)(index + 1) : (sbyte)-1,
+                //Translate = translate,
+                //Scale = scale,
+                //Rotate = rotation
             };
 
             _imd.Body.NodeArray.Nodes.Add(nodeItem);
@@ -607,16 +616,16 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 CollectNodeMeshes(node, index);
             }
 
-            sbyte childCount = 0;
+            sbyte childIndex = index;
 
             foreach (var child in node.Children)
             {
                 GetUncompressNodes(
                     child, 
                     index, 
-                    childCount > 0 ? (sbyte)(childCount - 1) : (sbyte)-1,
-                    childCount < node.ChildCount - 1 ? (sbyte)(childCount + 1) : (sbyte)-1);
-                childCount++;
+                    childIndex > 0 ? (sbyte)(childIndex) : (sbyte)-1,
+                    childIndex < node.ChildCount - 1 ? (sbyte)(childIndex + 2) : (sbyte)-1);
+                childIndex++;
             }
         }
 
