@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Assimp;
 using LibFoundation.Math;
 using LibNitro.Intermediate;
@@ -19,16 +18,18 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         public static readonly GeneratorInfo GeneratorInfo = new GeneratorInfo
         {
             Name    = "ASS to IMD (Made by Ermelber and Gericom)",
-            Version = "0.3.0"
+            Version = "0.3.1"
         };
 
         private readonly ImdConverterSettings _settings;
         private readonly Scene                _scene;
-        private          ModelBounds          _bounds;
+
+        //Used to calculate box pos scale when compress node != unite_combine
+        //(You still have to know the baked vertices positions for box_test)
+        private readonly Scene _sceneUnite;
 
         ///Key: Mesh Id, Value: List of vertices in VecFx32
         private Dictionary<int, List<VecFx32>> _meshes = new Dictionary<int, List<VecFx32>>();
-
         //Key: Mesh Id, Value: Node Index
         private Dictionary<int, sbyte> _meshesNode = new Dictionary<int, sbyte>();
 
@@ -38,12 +39,17 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         private void GetPosScales()
         {
-            _bounds                      = ModelBounds.Calculate(_meshes);
-            _imd.Body.ModelInfo.PosScale = _bounds.GetPosScale();
-            _imd.Body.BoxTest.PosScale   = _bounds.GetBoxPosScale();
+            var bounds = ModelBounds.Calculate(_meshes);
+            _imd.Body.ModelInfo.PosScale = bounds.GetPosScale();
 
-            _imd.Body.BoxTest.Position = (_bounds.BoxXyz >> _imd.Body.BoxTest.PosScale).ToVector3();
-            _imd.Body.BoxTest.Size = (_bounds.BoxWhd >> _imd.Body.BoxTest.PosScale).ToVector3();
+            if (_settings.CompressNodeMode != "unite_combine")
+            {
+                bounds = ModelBounds.Calculate(_sceneUnite);
+            }
+
+            _imd.Body.BoxTest.PosScale = bounds.GetBoxPosScale();
+            _imd.Body.BoxTest.Position = (bounds.BoxXyz >> _imd.Body.BoxTest.PosScale).ToVector3();
+            _imd.Body.BoxTest.Size = (bounds.BoxWhd >> _imd.Body.BoxTest.PosScale).ToVector3();
         }
 
         private void GetTextures()
@@ -232,12 +238,19 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         private void GetMatrices()
         {
-            _imd.Body.MatrixArray.Matrices.Add(new Matrix
+            var mtxCount = 0;
+
+            foreach (var node in _imd.Body.NodeArray.Nodes)
             {
-                Index        = 0,
-                MatrixWeight = 1,
-                NodeIndex    = 0
-            });
+                if (node.Kind != "mesh" && node.Kind != "joint") continue;
+
+                _imd.Body.MatrixArray.Matrices.Add(new Matrix
+                {
+                    Index = mtxCount++,
+                    MatrixWeight = 1,
+                    NodeIndex = (byte)node.Index
+                });
+            }
         }
 
         private void GetPolygons(Dictionary<int, int> matMap)
@@ -589,10 +602,13 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         {
             var index = _nodeCount++;
 
-            var mtx = node.Transform;
+            node.Transform.Decompose(out var scaleVec, out var rotQuat, out var transVec);
 
-            var translate = $"{mtx.A4} {mtx.B4} {mtx.C4}";
-            var scale = $"{mtx.A1} {mtx.B3} {mtx.C2}";
+            //turn quaternion into angle vector
+            //var quaternion =
+            
+            var translate = $"{transVec.X} {transVec.Y} {transVec.Z}";
+            var scale = $"{scaleVec.X} {scaleVec.Y} {scaleVec.Z}";
             var rotation = "0.00 0.00 0.00";
 
             var nodeItem = new Node
@@ -604,9 +620,9 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 BrotherPrev = broPrev,
                 BrotherNext = broNext,
                 Child = node.HasChildren ? (sbyte)(index + 1) : (sbyte)-1,
-                //Translate = translate,
-                //Scale = scale,
-                //Rotate = rotation
+                Translate = translate,
+                Scale = scale,
+                Rotate = rotation
             };
 
             _imd.Body.NodeArray.Nodes.Add(nodeItem);
@@ -680,11 +696,9 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
             //Magnify model
             context.Scale = _settings.Magnify;
-
-            if (_settings.CompressNodeMode == "unite_combine")
-                _scene = context.ImportFile(path, PostProcessSteps.PreTransformVertices);
-            else
-                _scene = context.ImportFile(path);
+            
+            _sceneUnite = context.ImportFile(path, PostProcessSteps.PreTransformVertices);
+            _scene = _settings.CompressNodeMode == "unite_combine" ? _sceneUnite : context.ImportFile(path);
 
             _imd = new LibNitro.Intermediate.Imd.Imd
             {
@@ -700,8 +714,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
             GetTextures();
             var matMap = GetMaterials();
-            GetMatrices();
             GetNodes(_scene.RootNode);
+            GetMatrices();
             GetPosScales();
             GetPolygons(matMap);
         }
@@ -773,6 +787,36 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             {
                 Min = min,
                 Max = max
+            };
+        }
+
+        public static ModelBounds Calculate(Scene scene)
+        {
+            var min = new Vector3(float.MaxValue);
+            var max = new Vector3(float.MinValue);
+
+            foreach (var meshId in scene.RootNode.MeshIndices)
+            {
+                var mesh = scene.Meshes[meshId];
+
+                foreach (var vtx in mesh.Vertices)
+                {
+                    //Set Min
+                    if (vtx.X < min.X) min.X = vtx.X;
+                    if (vtx.Y < min.Y) min.Y = vtx.Y;
+                    if (vtx.Z < min.Z) min.Z = vtx.Z;
+
+                    //Set Max
+                    if (vtx.X > max.X) max.X = vtx.X;
+                    if (vtx.Y > max.Y) max.Y = vtx.Y;
+                    if (vtx.Z > max.Z) max.Z = vtx.Z;
+                }
+            }
+
+            return new ModelBounds
+            {
+                Min = new VecFx32(min),
+                Max = new VecFx32(max)
             };
         }
     }
