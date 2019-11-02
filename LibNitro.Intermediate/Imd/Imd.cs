@@ -411,9 +411,27 @@ namespace LibNitro.Intermediate.Imd
 
     public class MatrixList
     {
-        [XmlAttribute("size")] public int Size = 1;
+        [XmlIgnore] public List<int> List = new List<int>();
 
-        [XmlText] public string Value = "0";
+        [XmlAttribute("size")]
+        public int Size
+        {
+            get
+            {
+                if (List != null)
+                    return List.Count;
+                return 0;
+            }
+
+            set { }
+        }
+
+        [XmlText]
+        public string Value
+        {
+            get { return string.Join(" ", List); }
+            set { }
+        }
     }
 
     public class NodeArray

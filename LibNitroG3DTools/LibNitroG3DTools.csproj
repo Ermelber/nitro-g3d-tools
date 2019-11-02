@@ -68,6 +68,7 @@
     <Compile Include="Stripping\QuadStripper.cs" />
     <Compile Include="Stripping\TriStripper.cs" />
     <Compile Include="Texture\Texture.cs" />
+    <Compile Include="Utils\MathUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LibNitro.Intermediate\LibNitro.Intermediate.csproj">

@@ -7,6 +7,7 @@ using LibFoundation.Math;
 using LibNitro.Intermediate;
 using LibNitro.Intermediate.Imd;
 using LibNitroG3DTools.Stripping;
+using LibNitroG3DTools.Utils;
 using Material = LibNitro.Intermediate.Imd.Material;
 using Node = LibNitro.Intermediate.Imd.Node;
 using Primitive = LibNitro.Intermediate.Imd.Primitive;
@@ -32,6 +33,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         private Dictionary<int, List<VecFx32>> _meshes = new Dictionary<int, List<VecFx32>>();
         //Key: Mesh Id, Value: Node Index
         private Dictionary<int, sbyte> _meshesNode = new Dictionary<int, sbyte>();
+        private List<string> _boneNames = new List<string>();
 
         private readonly string _modelDirectory;
 
@@ -256,7 +258,6 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
         private void GetPolygons(Dictionary<int, int> matMap)
         {
             var posScale = _imd.Body.ModelInfo.PosScale;
-            //var rootNode = _imd.Body.NodeArray.Nodes[0];
 
             var polygonId = 0;
             foreach (var mesh in _meshes)
@@ -289,6 +290,25 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                         Primitives = new List<Primitive>()
                     }
                 };
+                
+                //Get matrix list from node index
+                foreach (var mtx in _imd.Body.MatrixArray.Matrices.Where(x => x.NodeIndex == _meshesNode[meshId]))
+                {
+                    matrixPrimitive.MtxList.List.Add(mtx.Index);
+                }
+
+                //Get joints matrices
+                if (sceneMesh.HasBones)
+                {
+                    foreach (var boneName in sceneMesh.Bones.Select(x => x.Name))
+                    {
+                        foreach (var jointNode in _imd.Body.NodeArray.Nodes.Where(x => x.Name == boneName && x.Kind == "joint"))
+                        {
+                            matrixPrimitive.MtxList.List.Add(_imd.Body.MatrixArray.Matrices.First(x => x.NodeIndex == jointNode.Index).Index);
+                        }
+                    }
+                }
+                
                 polygon.MatrixPrimitives.Add(matrixPrimitive);
 
                 var finalPrimList = new List<Primitive>();
@@ -298,6 +318,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 var clrList  = new Dictionary<(int r, int g, int b), int>();
                 var texList  = new Dictionary<(int s, int t), int>();
                 var nrmList  = new Dictionary<(int x, int y, int z), int>();
+
                 foreach (var face in sceneMesh.Faces)
                 {
                     var prim = new Stripping.Primitive();
@@ -542,27 +563,21 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                     Priority = 0
                 });
 
-                //if (_settings.CompressNodeMode == "unite_combine")
-                //{
-                //    rootNode.PolygonSize  += polygon.PolygonSize;
-                //    rootNode.TriangleSize += polygon.TriangleSize;
-                //    rootNode.QuadSize     += polygon.QuadSize;
-                //    rootNode.VertexSize   += polygon.VertexSize;
-
-                //    rootNode.Displays.Add(new NodeDisplay
-                //    {
-                //        Index    = rootNode.Displays.Count,
-                //        Polygon  = polygonId,
-                //        Material = materialId,
-                //        Priority = 0
-                //    });
-                //}
-                //else
-                //{
-                //    //throw new NotSupportedException("Only Compress Node Mode \"unite_combine\" is supported for now");
-                //}
-
                 polygonId++;
+            }
+        }
+
+        private void GetBoneNames()
+        {
+            foreach (var mesh in _scene.Meshes)
+            {
+                if (!mesh.HasBones) continue;
+
+                foreach (var bone in mesh.Bones)
+                {
+                    if (!_boneNames.Contains(bone.Name))
+                        _boneNames.Add(bone.Name);
+                }
             }
         }
 
@@ -597,32 +612,39 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
         private static sbyte _nodeCount = 0;
 
+        private string DetermineKind(Assimp.Node node)
+        {
+            if (node.HasMeshes)
+                return "mesh";
+
+            return _boneNames.Contains(node.Name) ? "joint" : "null";
+        }
+        
         //compress_mode = none
         private void GetUncompressNodes(Assimp.Node node, sbyte parent = -1, sbyte broPrev = -1, sbyte broNext = -1)
         {
+            var kind = DetermineKind(node);
+            
             var index = _nodeCount++;
 
-            node.Transform.Decompose(out var scaleVec, out var rotQuat, out var transVec);
-
+            node.Transform.Decompose(out var sV, out var rQ, out var tV);
+            var transVec = new VecFx32(tV.X, tV.Y, tV.Z).ToVector3();
+            var scaleVec = new VecFx32(sV.X, sV.Y, sV.Z).ToVector3();
             //turn quaternion into angle vector
-            //var quaternion =
+            var rotVec = new VecFx32(rQ.ToEulerAngles()).ToVector3();
             
-            var translate = $"{transVec.X} {transVec.Y} {transVec.Z}";
-            var scale = $"{scaleVec.X} {scaleVec.Y} {scaleVec.Z}";
-            var rotation = "0.00 0.00 0.00";
-
             var nodeItem = new Node
             {
                 Index = index,
                 Name = node.Name,
-                Kind = node.HasMeshes ? "mesh" : "null",
+                Kind = kind,
                 Parent = parent,
                 BrotherPrev = broPrev,
                 BrotherNext = broNext,
                 Child = node.HasChildren ? (sbyte)(index + 1) : (sbyte)-1,
-                Translate = translate,
-                Scale = scale,
-                Rotate = rotation
+                Translate = $"{transVec.X} {transVec.Y} {transVec.Z}",
+                Scale = $"{scaleVec.X} {scaleVec.Y} {scaleVec.Z}",
+                Rotate = $"{rotVec.X} {rotVec.Y} {rotVec.Z}"
             };
 
             _imd.Body.NodeArray.Nodes.Add(nodeItem);
@@ -678,6 +700,9 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             switch (_settings.CompressNodeMode)
             {
                 case "none":
+                case "cull":
+                case "merge":
+                    GetBoneNames();
                     GetUncompressNodes(node);
                     break;
                 case "unite_combine":
@@ -795,10 +820,8 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             var min = new Vector3(float.MaxValue);
             var max = new Vector3(float.MinValue);
 
-            foreach (var meshId in scene.RootNode.MeshIndices)
+            foreach (var mesh in scene.Meshes)
             {
-                var mesh = scene.Meshes[meshId];
-
                 foreach (var vtx in mesh.Vertices)
                 {
                     //Set Min

@@ -63,6 +63,9 @@ namespace LibNitro.Intermediate
         public static VecFx32 operator >>(VecFx32 vec, int shift) =>
             new VecFx32(vec.X >> shift, vec.Y >> shift, vec.Z >> shift);
 
+        public static VecFx32 operator <<(VecFx32 vec, int shift) =>
+            new VecFx32(vec.X << shift, vec.Y << shift, vec.Z << shift);
+
         public static VecFx32 operator -(VecFx32 vec1, VecFx32 vec2) =>
             new VecFx32(vec1.X - vec2.X, vec1.Y - vec2.Y, vec1.Z - vec2.Z);
 
