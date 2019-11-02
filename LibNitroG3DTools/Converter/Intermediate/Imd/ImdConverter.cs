@@ -244,6 +244,10 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
             foreach (var node in _imd.Body.NodeArray.Nodes)
             {
+                //todo:
+                //It occurs that no matrix linked to a mesh node is output as well.
+                //Find out why.
+
                 if (node.Kind != "mesh" && node.Kind != "joint") continue;
 
                 _imd.Body.MatrixArray.Matrices.Add(new Matrix
@@ -253,6 +257,20 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                     NodeIndex = (byte)node.Index
                 });
             }
+        }
+
+        private int GetMatrixListIndex(MatrixList mtxList, string boneName)
+        {
+            var nodeIndex = _imd.Body.NodeArray.Nodes.First(x => x.Kind == "joint" && x.Name == boneName).Index;
+            var mtxIndex = _imd.Body.MatrixArray.Matrices.First(x => x.NodeIndex == nodeIndex).Index;
+
+            for (int i = 0; i < mtxList.List.Count; i++)
+            {
+                if (mtxList.List[i] == mtxIndex)
+                    return i;
+            }
+
+            return 0;
         }
 
         private void GetPolygons(Dictionary<int, int> matMap)
@@ -318,6 +336,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 var clrList  = new Dictionary<(int r, int g, int b), int>();
                 var texList  = new Dictionary<(int s, int t), int>();
                 var nrmList  = new Dictionary<(int x, int y, int z), int>();
+                var mtxList  = new Dictionary<int, int>();
 
                 foreach (var face in sceneMesh.Faces)
                 {
@@ -341,8 +360,33 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                     {
                         var vertex = _meshes[meshId][vertexIndex];
 
-                        prim.Matrices.Add(-1);
+                        //Matrices
+                        if (sceneMesh.HasBones)
+                        {
+                            int mtx = 0;
 
+                            foreach (var bone in sceneMesh.Bones)
+                            {
+                                if (bone.VertexWeights.Any(x => x.VertexID == vertexIndex))
+                                {
+                                    mtx = GetMatrixListIndex(matrixPrimitive.MtxList, bone.Name);
+                                    break;
+                                }
+                            }
+
+                            int mtxIdx = mtxList.Count;
+                            if (mtxList.ContainsKey(mtx))
+                                mtxIdx = mtxList[mtx];
+                            else
+                                mtxList.Add(mtx, mtxIdx);
+                            prim.Matrices.Add(mtxIdx);
+                        }
+                        else
+                        {
+                            prim.Matrices.Add(0);
+                        }
+                        
+                        
                         //Vertex Colors
                         if (!useNormals && sceneMesh.HasVertexColors(0))
                         {
@@ -420,6 +464,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 var clrs = clrList.Keys.ToArray();
                 var texs = texList.Keys.ToArray();
                 var nrms = nrmList.Keys.ToArray();
+                var mtxs = mtxList.Keys.ToArray();
 
                 Stripping.Primitive[] newPrims;
 
@@ -489,9 +534,17 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
                     var prevVtx = new VecFx32();
                     int prevClrIdx = -1;
+                    MatrixCommand prevMtx = null;
 
                     for (int i = 0; i < prim.VertexCount; i++)
                     {
+                        var mtxCommand = new MatrixCommand {Index = (byte) mtxs[prim.Matrices[i]]};
+                        if (prevMtx == null || prevMtx.Index != mtxCommand.Index)
+                        {
+                            primitive.Commands.Add(mtxCommand);
+                        }
+                        prevMtx = mtxCommand;
+
                         if (texture != null)
                             primitive.Commands.Add(new TextureCoordCommand(texs[prim.TexCoords[i]].s / 16f,
                                 texs[prim.TexCoords[i]].t / 16f));
@@ -538,7 +591,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 if (finalPrimList.Count == 0)
                     continue;
 
-                finalPrimList[0].Commands.Insert(0, new MatrixCommand {Index = 0});
+                //finalPrimList[0].Commands.Insert(0, new MatrixCommand {Index = 0});
 
                 matrixPrimitive.PrimitiveArray.Primitives.AddRange(finalPrimList);
 
@@ -636,7 +689,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
             var nodeItem = new Node
             {
                 Index = index,
-                Name = node.Name,
+                Name = node.Name == "RootNode" && node.Parent == null ? "world_root" : node.Name,
                 Kind = kind,
                 Parent = parent,
                 BrotherPrev = broPrev,
