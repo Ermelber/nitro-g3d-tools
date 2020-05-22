@@ -248,7 +248,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                 //It occurs that no matrix linked to a mesh node is output as well.
                 //Find out why.
 
-                if (node.Kind != "mesh" && node.Kind != "joint") continue;
+                if (node.Kind != "joint") continue;
 
                 _imd.Body.MatrixArray.Matrices.Add(new Matrix
                 {
@@ -361,10 +361,9 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                         var vertex = _meshes[meshId][vertexIndex];
 
                         //Matrices
+                        int mtx = 0;
                         if (sceneMesh.HasBones)
                         {
-                            int mtx = 0;
-
                             foreach (var bone in sceneMesh.Bones)
                             {
                                 if (bone.VertexWeights.Any(x => x.VertexID == vertexIndex))
@@ -373,20 +372,14 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
                                     break;
                                 }
                             }
-
-                            int mtxIdx = mtxList.Count;
-                            if (mtxList.ContainsKey(mtx))
-                                mtxIdx = mtxList[mtx];
-                            else
-                                mtxList.Add(mtx, mtxIdx);
-                            prim.Matrices.Add(mtxIdx);
                         }
+                        int mtxIdx = mtxList.Count;
+                        if (mtxList.ContainsKey(mtx))
+                            mtxIdx = mtxList[mtx];
                         else
-                        {
-                            prim.Matrices.Add(0);
-                        }
-                        
-                        
+                            mtxList.Add(mtx, mtxIdx);
+                        prim.Matrices.Add(mtxIdx);
+
                         //Vertex Colors
                         if (!useNormals && sceneMesh.HasVertexColors(0))
                         {
@@ -534,16 +527,27 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
                     var prevVtx = new VecFx32();
                     int prevClrIdx = -1;
-                    MatrixCommand prevMtx = null;
+                    //MatrixCommand prevMtx = null;
+                    int prevMtxIdx = -1;
 
                     for (int i = 0; i < prim.VertexCount; i++)
                     {
-                        var mtxCommand = new MatrixCommand {Index = (byte) mtxs[prim.Matrices[i]]};
-                        if (prevMtx == null || prevMtx.Index != mtxCommand.Index)
+                        //var mtxCommand = new MatrixCommand {Index = (byte) mtxs[prim.Matrices[i]]};
+                        //if (prevMtx == null || prevMtx.Index != mtxCommand.Index)
+                        //{
+                        //    primitive.Commands.Add(mtxCommand);
+                        //}
+                        //prevMtx = mtxCommand;
+                        if (prevMtxIdx != prim.Matrices[i])
                         {
-                            primitive.Commands.Add(mtxCommand);
+                            primitive.Commands.Add(new MatrixCommand
+                            {
+                                Index = (byte) mtxs[prim.Matrices[i]]
+                            });
+
+                            prevMtxIdx = prim.Matrices[i];
                         }
-                        prevMtx = mtxCommand;
+
 
                         if (texture != null)
                             primitive.Commands.Add(new TextureCoordCommand(texs[prim.TexCoords[i]].s / 16f,
@@ -709,7 +713,7 @@ namespace LibNitroG3DTools.Converter.Intermediate.Imd
 
             sbyte childIndex = index;
 
-            foreach (var child in node.Children)
+            foreach (var child in node.Children.OrderBy(x => x.Name))
             {
                 GetUncompressNodes(
                     child, 
