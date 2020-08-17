@@ -32,7 +32,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
         private static byte[] GetSbc(Imd imd)
         {
             var w = new Sbc.Sbc();
-            
+
             w.CommandList.Add(new SbcNodeDesc(1, 0, 0, 0));
             w.CommandList.Add(new SbcNop());
             w.CommandList.Add(new SbcNode(0, true));
@@ -96,7 +96,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
 
             foreach (var node in imd.Body.NodeArray.Nodes)
             {
-                nodes.dict.Add(node.Name, GetNodeSetData(node) );
+                nodes.dict.Add(node.Name, GetNodeSetData(node));
             }
 
             nodes.data = GetNodeData(imd);
@@ -142,7 +142,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                     var texName = imd.Body.TexImageArray.TexImages[mat.TexImageIdx].Name;
                     var palName = imd.Body.TexImageArray.TexImages[mat.TexImageIdx].PaletteName;
 
-                    texH = (ushort) imd.Body.TexImageArray.TexImages[mat.TexImageIdx].OriginalHeight;
+                    texH = (ushort)imd.Body.TexImageArray.TexImages[mat.TexImageIdx].OriginalHeight;
                     texW = (ushort)imd.Body.TexImageArray.TexImages[mat.TexImageIdx].OriginalWidth;
 
                     if (!matSet.dictTexToMatList.Contains(texName))
@@ -150,7 +150,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                         matSet.dictTexToMatList.Add(texName, new TexToMatData
                         {
                             NrMat = 1,
-                            Materials = new [] {matIdx}
+                            Materials = new[] { matIdx }
                         });
                     }
                     else
@@ -188,7 +188,7 @@ namespace LibNitroG3DTools.Converter.Binary.Nsbmd
                 curMat.SetDiffuse(mat.GetDiffuse());
                 curMat.SetEmission(mat.GetEmission());
                 curMat.SetSpecular(mat.GetSpecular());
-                
+
                 curMat.SetAlpha(mat.Alpha);
 
                 curMat.flag = TEXMTX_TRANSZERO | TEXMTX_ROTZERO | TEXMTX_SCALEONE | DIFFUSE | VTXCOLOR | SHININESS |

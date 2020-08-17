@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29905.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibNitro.Intermediate", "LibNitro.Intermediate\LibNitro.Intermediate.csproj", "{B0C7A03A-112E-4C65-A241-65BB6CEA3DF8}"
 EndProject
@@ -10,6 +10,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryConverter", "BinaryConverter\BinaryConverter.csproj", "{78972CD8-75FD-4107-92D1-6932DDCEE6B4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibNitroG3DTools", "LibNitroG3DTools\LibNitroG3DTools.csproj", "{9B76FE30-44F6-4BC1-9606-10C76BE13752}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{9103F731-C583-481B-81A9-CD0F45CB24C5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConsoleTools", "ConsoleTools", "{68AB82F4-0DDF-4293-AD4F-0A94CB84D019}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinaryTexConverter", "BinaryTexConverter\BinaryTexConverter.csproj", "{A0D1D5CA-BCD4-47F9-B1A7-299214159C7E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,9 +39,20 @@ Global
 		{9B76FE30-44F6-4BC1-9606-10C76BE13752}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B76FE30-44F6-4BC1-9606-10C76BE13752}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B76FE30-44F6-4BC1-9606-10C76BE13752}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0D1D5CA-BCD4-47F9-B1A7-299214159C7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0D1D5CA-BCD4-47F9-B1A7-299214159C7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0D1D5CA-BCD4-47F9-B1A7-299214159C7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0D1D5CA-BCD4-47F9-B1A7-299214159C7E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B0C7A03A-112E-4C65-A241-65BB6CEA3DF8} = {9103F731-C583-481B-81A9-CD0F45CB24C5}
+		{ADCF7D64-04E0-48EE-AF0B-45AB9EF61FB4} = {68AB82F4-0DDF-4293-AD4F-0A94CB84D019}
+		{78972CD8-75FD-4107-92D1-6932DDCEE6B4} = {68AB82F4-0DDF-4293-AD4F-0A94CB84D019}
+		{9B76FE30-44F6-4BC1-9606-10C76BE13752} = {9103F731-C583-481B-81A9-CD0F45CB24C5}
+		{A0D1D5CA-BCD4-47F9-B1A7-299214159C7E} = {68AB82F4-0DDF-4293-AD4F-0A94CB84D019}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B5DDB640-2C3C-4484-A545-F5EC0AE5D8C9}

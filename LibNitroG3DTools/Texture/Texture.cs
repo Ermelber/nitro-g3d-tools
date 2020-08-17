@@ -10,8 +10,11 @@ namespace LibNitroG3DTools.Texture
     public class Texture
     {
         private readonly byte[] _palette;
+        public byte[] RawPalette => _palette;
         private readonly byte[] _texelData;
+        public byte[] RawTexelData => _texelData;
         private readonly byte[] _plttIdxData;
+        public byte[] RawPlttIdxData => _plttIdxData;
 
         public string Format { get; }
         public int Height { get; }

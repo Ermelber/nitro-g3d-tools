@@ -4,14 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{78972CD8-75FD-4107-92D1-6932DDCEE6B4}</ProjectGuid>
+    <ProjectGuid>{A0D1D5CA-BCD4-47F9-B1A7-299214159C7E}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>BinaryConverter</RootNamespace>
-    <AssemblyName>binconv</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <RootNamespace>BinaryTexConverter</RootNamespace>
+    <AssemblyName>BinaryTexConverter</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -33,15 +33,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="LibNitro, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\DLLs\LibNitro.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arguments.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -49,12 +51,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LibNitro.Intermediate\LibNitro.Intermediate.csproj">
-      <Project>{B0C7A03A-112E-4C65-A241-65BB6CEA3DF8}</Project>
-      <Name>LibNitro.Intermediate</Name>
-    </ProjectReference>
     <ProjectReference Include="..\LibNitroG3DTools\LibNitroG3DTools.csproj">
-      <Project>{9b76fe30-44f6-4bc1-9606-10c76be13752}</Project>
+      <Project>{9B76FE30-44F6-4BC1-9606-10C76BE13752}</Project>
       <Name>LibNitroG3DTools</Name>
     </ProjectReference>
   </ItemGroup>
